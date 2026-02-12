@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Transaction } from '../types';
-import { db } from '../db/db';
+import { supabaseApi } from '../lib/supabaseApi';
 
 interface TransactionStore {
   transactions: Transaction[];
@@ -20,7 +20,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   fetchTransactions: async () => {
     set({ loading: true });
     try {
-      const transactions = await db.transactions.orderBy('occurredAt').reverse().toArray();
+      const transactions = await supabaseApi.getTransactions();
       set({ transactions, loading: false });
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
@@ -30,10 +30,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   addTransaction: async (transaction: Omit<Transaction, 'id' | 'createdAt'>) => {
     try {
-      const id = await db.transactions.add({
-        ...transaction,
-        createdAt: new Date(),
-      });
+      const id = await supabaseApi.addTransaction(transaction);
       await get().fetchTransactions();
       return id;
     } catch (error) {
@@ -44,7 +41,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   updateTransaction: async (id: number, transaction: Partial<Transaction>) => {
     try {
-      await db.transactions.update(id, transaction);
+      await supabaseApi.updateTransaction(id, transaction);
       await get().fetchTransactions();
     } catch (error) {
       console.error('Failed to update transaction:', error);
@@ -54,7 +51,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   deleteTransaction: async (id: number) => {
     try {
-      await db.transactions.delete(id);
+      await supabaseApi.deleteTransaction(id);
       await get().fetchTransactions();
     } catch (error) {
       console.error('Failed to delete transaction:', error);
@@ -64,12 +61,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   getRecentTransactions: async (limit = 50) => {
     try {
-      const transactions = await db.transactions
-        .orderBy('occurredAt')
-        .reverse()
-        .limit(limit)
-        .toArray();
-      return transactions;
+      return await supabaseApi.getRecentTransactions(limit);
     } catch (error) {
       console.error('Failed to get recent transactions:', error);
       return [];
@@ -78,12 +70,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
   getTransactionsByCustomerId: async (customerId: number) => {
     try {
-      const transactions = await db.transactions
-        .where('customerId')
-        .equals(customerId)
-        .reverse()
-        .toArray();
-      return transactions;
+      return await supabaseApi.getTransactionsByCustomerId(customerId);
     } catch (error) {
       console.error('Failed to get transactions by customer:', error);
       return [];

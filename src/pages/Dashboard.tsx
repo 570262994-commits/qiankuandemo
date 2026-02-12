@@ -173,7 +173,7 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right self-start">
                     <p className={`text-xl font-bold ${getAmountColor(transaction.type)}`}>
                       {formatAmount(transaction.amount, transaction.type)}
                     </p>

@@ -57,14 +57,12 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
             {filteredCustomers.map((customer) => (
               <div
                 key={customer.id}
-                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow"
+                onClick={() => handleEditCustomer(customer)}
+                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 
-                      className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 transition-colors"
-                      onClick={() => handleEditCustomer(customer)}
-                    >
+                    <h3 className="font-semibold text-gray-900 text-lg">
                       {customer.name}
                     </h3>
                     {customer.phone && (
