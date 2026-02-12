@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, Filter } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
@@ -8,6 +8,8 @@ import type { Transaction } from '../types';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import TransactionDrawer from '../components/TransactionDrawer';
+
+type FilterType = 'all' | TransactionType;
 
 export default function Dashboard() {
   const { transactions, fetchTransactions, deleteTransaction } = useTransactionStore();
@@ -18,6 +20,10 @@ export default function Dashboard() {
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
   const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
+  const [searchText, setSearchText] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterType, setFilterType] = useState<FilterType>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     fetchCustomers();
@@ -82,6 +88,29 @@ export default function Dashboard() {
     return customer?.name || '未知客户';
   };
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const customerName = getCustomerName(transaction.customerId);
+      const matchesSearch = searchText === '' || 
+        customerName.toLowerCase().includes(searchText.toLowerCase());
+      
+      const transactionDate = format(new Date(transaction.occurredAt), 'yyyy-MM-dd');
+      const matchesDate = filterDate === '' || transactionDate === filterDate;
+      
+      const matchesType = filterType === 'all' || transaction.type === filterType;
+      
+      return matchesSearch && matchesDate && matchesType;
+    });
+  }, [transactions, searchText, filterDate, filterType, customers]);
+
+  const clearFilters = () => {
+    setSearchText('');
+    setFilterDate('');
+    setFilterType('all');
+  };
+
+  const hasActiveFilters = searchText !== '' || filterDate !== '' || filterType !== 'all';
+
   const formatAmount = (amount: number, type: TransactionType) => {
     if (type === TransactionType.DEBT) {
       return `-¥${amount.toFixed(2)}`;
@@ -113,17 +142,102 @@ export default function Dashboard() {
         <div className="max-w-2xl mx-auto px-4 py-4">
           <h1 className="text-xl font-bold text-gray-900">客户欠款助手</h1>
         </div>
+        <div className="max-w-2xl mx-auto px-4 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索客户名称..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              {searchText && (
+                <button
+                  onClick={() => setSearchText('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-lg border transition-colors ${
+                showFilters || hasActiveFilters
+                  ? 'bg-blue-50 border-blue-300 text-blue-600'
+                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-5 h-5" />
+            </button>
+          </div>
+          {showFilters && (
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    filterType === 'all'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  全部
+                </button>
+                <button
+                  onClick={() => setFilterType(TransactionType.DEBT)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    filterType === TransactionType.DEBT
+                      ? 'bg-red-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  欠款
+                </button>
+                <button
+                  onClick={() => setFilterType(TransactionType.PAYBACK)}
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    filterType === TransactionType.PAYBACK
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  还款
+                </button>
+              </div>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  清除筛选
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6">
-        {transactions.length === 0 ? (
+        {filteredTransactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-            <p className="text-lg">暂无流水记录</p>
-            <p className="text-sm mt-2">点击下方 + 号开始记账</p>
+            <p className="text-lg">{hasActiveFilters ? '无匹配记录' : '暂无流水记录'}</p>
+            <p className="text-sm mt-2">{hasActiveFilters ? '请调整搜索条件' : '点击下方 + 号开始记账'}</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {transactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
                 className={`rounded-lg shadow-sm p-4 transition-all hover:shadow-md active:scale-95 cursor-pointer ${getCardStyle(transaction.type)}`}
