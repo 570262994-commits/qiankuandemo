@@ -1,20 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Plus, Phone } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
+import { useTransactionStore } from '../store/transactionStore';
+import { TransactionType } from '../types';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
 
+interface CustomerWithCalculated extends Customer {
+  totalDebt: number;
+  totalPayment: number;
+  balance: number;
+  remainingCredit: number | null;
+}
+
 export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
+  const { transactions, fetchTransactions } = useTransactionStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
 
   useEffect(() => {
     fetchCustomers();
-  }, [fetchCustomers]);
+    fetchTransactions();
+  }, [fetchCustomers, fetchTransactions]);
 
-  const filteredCustomers = customers.filter(customer =>
+  const customersWithCalculated: CustomerWithCalculated[] = useMemo(() => {
+    return customers.map(customer => {
+      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+      const totalDebt = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalPayment = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalDebt - totalPayment;
+      
+      let remainingCredit: number | null = null;
+      if (customer.creditLimit !== null) {
+        remainingCredit = customer.creditLimit - balance;
+      }
+      
+      return {
+        ...customer,
+        totalDebt,
+        totalPayment,
+        balance,
+        remainingCredit,
+      };
+    });
+  }, [customers, transactions]);
+
+  const filteredCustomers = customersWithCalculated.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -26,6 +63,35 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
   const handleCloseDialog = () => {
     setIsAddDialogOpen(false);
     setEditingCustomer(undefined);
+  };
+
+  const formatCreditLimit = (limit: number | null) => {
+    if (limit === null) return '无限制';
+    return `¥${limit.toFixed(2)}`;
+  };
+
+  const formatRemainingCredit = (remaining: number | null, totalLimit: number | null) => {
+    if (totalLimit === null) return { text: '无限制', color: 'text-blue-600' };
+    if (remaining === null) return { text: '¥0.00', color: 'text-red-600' };
+    
+    const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
+    
+    if (remaining <= 0) {
+      return { text: `¥${remaining.toFixed(2)}`, color: 'text-red-600' };
+    } else if (percentage < 20) {
+      return { text: `¥${remaining.toFixed(2)}`, color: 'text-yellow-600' };
+    } else {
+      return { text: `¥${remaining.toFixed(2)}`, color: 'text-emerald-600' };
+    }
+  };
+
+  const getRemainingCreditBgColor = (remaining: number | null, totalLimit: number | null) => {
+    if (totalLimit === null) return 'bg-blue-50';
+    if (remaining === null || remaining <= 0) return 'bg-red-50';
+    
+    const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
+    if (percentage < 20) return 'bg-yellow-50';
+    return 'bg-emerald-50';
   };
 
   return (
@@ -54,37 +120,52 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredCustomers.map((customer) => (
-              <div
-                key={customer.id}
-                onClick={() => handleEditCustomer(customer)}
-                className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg">
-                      {customer.name}
-                    </h3>
-                    {customer.phone && (
-                      <div className="flex items-center gap-2 mt-2 text-gray-500">
-                        <Phone className="w-4 h-4" />
-                        <span className="text-sm">{customer.phone}</span>
+            {filteredCustomers.map((customer) => {
+              const remainingInfo = formatRemainingCredit(customer.remainingCredit, customer.creditLimit);
+              const bgColor = getRemainingCreditBgColor(customer.remainingCredit, customer.creditLimit);
+              
+              return (
+                <div
+                  key={customer.id}
+                  onClick={() => handleEditCustomer(customer)}
+                  className={`rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all ${bgColor}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-900 text-lg">
+                          {customer.name}
+                        </h3>
                       </div>
-                    )}
-                    <div className="mt-3 space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">信用额度</span>
-                        <span className="font-medium">¥{customer.creditLimit.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">固定账期</span>
-                        <span className="font-medium">{customer.paymentTerm} 天</span>
+                      {customer.phone && (
+                        <div className="flex items-center gap-2 mt-2 text-gray-500">
+                          <Phone className="w-4 h-4" />
+                          <span className="text-sm">{customer.phone}</span>
+                        </div>
+                      )}
+                      <div className="mt-3 space-y-1.5 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">信用额度</span>
+                          <span className="font-medium">
+                            {formatCreditLimit(customer.creditLimit)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">剩余额度</span>
+                          <span className={`font-medium ${remainingInfo.color}`}>
+                            {remainingInfo.text}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">固定账期</span>
+                          <span className="font-medium">{customer.paymentTerm} 天</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

@@ -15,6 +15,7 @@ interface AddCustomerDialogProps {
 export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer }: AddCustomerDialogProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [isUnlimitedCredit, setIsUnlimitedCredit] = useState(true);
   const [creditLimit, setCreditLimit] = useState('0');
   const [paymentTerm, setPaymentTerm] = useState('30');
   const { addCustomer, updateCustomer, getCustomerByName } = useCustomerStore();
@@ -28,7 +29,13 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       if (customer) {
         setName(customer.name);
         setPhone(customer.phone || '');
-        setCreditLimit(customer.creditLimit.toString());
+        if (customer.creditLimit === null) {
+          setIsUnlimitedCredit(true);
+          setCreditLimit('0');
+        } else {
+          setIsUnlimitedCredit(false);
+          setCreditLimit(customer.creditLimit.toString());
+        }
         setPaymentTerm(customer.paymentTerm.toString());
       } else {
         resetForm();
@@ -39,6 +46,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
   const resetForm = () => {
     setName('');
     setPhone('');
+    setIsUnlimitedCredit(true);
     setCreditLimit('0');
     setPaymentTerm('30');
   };
@@ -61,7 +69,9 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       return;
     }
 
-    if (parseFloat(creditLimit) < 0) {
+    const finalCreditLimit = isUnlimitedCredit ? null : parseInt(creditLimit) || 0;
+
+    if (!isUnlimitedCredit && parseInt(creditLimit) < 0) {
       warning('信用额度不能为负数');
       return;
     }
@@ -84,7 +94,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
         await updateCustomer(customer.id!, {
           name: name.trim(),
           phone: phone.trim() || undefined,
-          creditLimit: parseFloat(creditLimit),
+          creditLimit: finalCreditLimit,
           paymentTerm: parseInt(paymentTerm),
         });
 
@@ -100,7 +110,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
         await addCustomer({
           name: name.trim(),
           phone: phone.trim() || undefined,
-          creditLimit: parseFloat(creditLimit),
+          creditLimit: finalCreditLimit,
           paymentTerm: parseInt(paymentTerm),
         });
 
@@ -156,18 +166,45 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                信用额度（元） <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                value={creditLimit}
-                onChange={(e) => setCreditLimit(e.target.value)}
-                placeholder="0"
-                step="1"
-                min="0"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  信用额度（元）
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-sm text-gray-500">无限额度</span>
+                  <div
+                    className={`w-11 h-6 rounded-full transition-colors relative ${
+                      isUnlimitedCredit ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}
+                    onClick={() => setIsUnlimitedCredit(!isUnlimitedCredit)}
+                  >
+                    <div
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow ${
+                        isUnlimitedCredit ? 'left-6' : 'left-1'
+                      }`}
+                    />
+                  </div>
+                </label>
+              </div>
+              {!isUnlimitedCredit && (
+                <input
+                  type="number"
+                  value={creditLimit}
+                  onChange={(e) => setCreditLimit(e.target.value)}
+                  placeholder="0"
+                  step="1"
+                  min="0"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              )}
+              {isUnlimitedCredit && (
+                <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-600 font-medium">
+                  无限制
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                {isUnlimitedCredit ? '客户可无限欠款' : '0 表示不允许欠款'}
+              </p>
             </div>
 
             <div>

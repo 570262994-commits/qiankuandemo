@@ -9,7 +9,7 @@ export interface Customer {
   id?: number;
   name: string;
   phone?: string;
-  creditLimit: number;
+  creditLimit: number | null;
   paymentTerm: number;
   createdAt?: Date;
 }

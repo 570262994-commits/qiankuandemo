@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { X, ChevronDown, User } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
@@ -25,12 +25,29 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   const [customerSearch, setCustomerSearch] = useState('');
   
   const { customers, addCustomer, getCustomerByName } = useCustomerStore();
-  const { addTransaction, updateTransaction } = useTransactionStore();
+  const { transactions, addTransaction, updateTransaction } = useTransactionStore();
   const { warning } = useModalStore();
   const toast = useToastStore();
   const amountInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!transaction;
+
+  const customerRemainingCredit = useMemo(() => {
+    if (!selectedCustomer) return null;
+    
+    if (selectedCustomer.creditLimit === null) return null;
+    
+    const customerTransactions = transactions.filter(t => t.customerId === selectedCustomer.id);
+    const totalDebt = customerTransactions
+      .filter(t => t.type === TransactionType.DEBT)
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalPayment = customerTransactions
+      .filter(t => t.type === TransactionType.PAYBACK)
+      .reduce((sum, t) => sum + t.amount, 0);
+    const balance = totalDebt - totalPayment;
+    
+    return selectedCustomer.creditLimit - balance;
+  }, [selectedCustomer, transactions]);
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +81,20 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     if (!amount || parseFloat(amount) <= 0) {
       warning('请输入有效金额');
       return;
+    }
+
+    const inputAmount = parseFloat(amount);
+
+    if (type === TransactionType.DEBT) {
+      if (selectedCustomer.creditLimit === 0) {
+        warning('该客户信用额度为0，不允许录入欠款');
+        return;
+      }
+      
+      if (customerRemainingCredit !== null && inputAmount > customerRemainingCredit) {
+        warning(`该客户信用额度不足，剩余额度 ¥${customerRemainingCredit.toFixed(2)}`);
+        return;
+      }
     }
 
     try {
@@ -135,11 +166,11 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
       const id = await addCustomer({
         name: customerSearch,
         phone: '',
-        creditLimit: 0,
+        creditLimit: null,
         paymentTerm: 30,
       });
 
-      const newCustomer = { id, name: customerSearch, phone: '', creditLimit: 0, paymentTerm: 30 };
+      const newCustomer = { id, name: customerSearch, phone: '', creditLimit: null, paymentTerm: 30 };
       setSelectedCustomer(newCustomer);
       setShowCustomerDropdown(false);
       setCustomerSearch('');
