@@ -1,26 +1,38 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
+import { useModalStore } from '../store/modalStore';
 import type { Customer } from '../types';
 
 interface AddCustomerDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  customer?: Customer;
 }
 
-export default function AddCustomerDialog({ isOpen, onClose, onSubmit }: AddCustomerDialogProps) {
+export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer }: AddCustomerDialogProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [creditLimit, setCreditLimit] = useState('0');
   const [paymentTerm, setPaymentTerm] = useState('30');
-  const { addCustomer, getCustomerByName } = useCustomerStore();
+  const { addCustomer, updateCustomer, getCustomerByName } = useCustomerStore();
+  const { warning, error, success } = useModalStore();
+
+  const isEditMode = !!customer;
 
   useEffect(() => {
     if (isOpen) {
-      resetForm();
+      if (customer) {
+        setName(customer.name);
+        setPhone(customer.phone || '');
+        setCreditLimit(customer.creditLimit.toString());
+        setPaymentTerm(customer.paymentTerm.toString());
+      } else {
+        resetForm();
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, customer]);
 
   const resetForm = () => {
     setName('');
@@ -33,49 +45,69 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit }: AddCust
     e.preventDefault();
 
     if (!name.trim()) {
-      alert('请输入客户姓名');
+      warning('请输入客户姓名');
       return;
     }
 
     if (name.length < 1 || name.length > 20) {
-      alert('客户姓名长度应在1-20个字符之间');
+      warning('客户姓名长度应在1-20个字符之间');
       return;
     }
 
     if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
-      alert('请输入有效的手机号');
+      warning('请输入有效的手机号');
       return;
     }
 
     if (parseFloat(creditLimit) < 0) {
-      alert('信用额度不能为负数');
+      warning('信用额度不能为负数');
       return;
     }
 
     if (parseInt(paymentTerm) <= 0) {
-      alert('固定账期必须大于0');
+      warning('固定账期必须大于0');
       return;
     }
 
     try {
-      const existingCustomer = await getCustomerByName(name);
-      if (existingCustomer) {
-        alert('客户已存在，请直接录入账务');
-        return;
+      if (isEditMode && customer) {
+        if (name !== customer.name) {
+          const existingCustomer = await getCustomerByName(name);
+          if (existingCustomer && existingCustomer.id !== customer.id) {
+            warning('客户姓名已存在');
+            return;
+          }
+        }
+
+        await updateCustomer(customer.id!, {
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+          creditLimit: parseFloat(creditLimit),
+          paymentTerm: parseInt(paymentTerm),
+        });
+
+        success('客户信息更新成功！');
+        onSubmit();
+      } else {
+        const existingCustomer = await getCustomerByName(name);
+        if (existingCustomer) {
+          warning('客户已存在，请直接录入账务');
+          return;
+        }
+
+        await addCustomer({
+          name: name.trim(),
+          phone: phone.trim() || undefined,
+          creditLimit: parseFloat(creditLimit),
+          paymentTerm: parseInt(paymentTerm),
+        });
+
+        success('客户添加成功！');
+        onSubmit();
       }
-
-      await addCustomer({
-        name: name.trim(),
-        phone: phone.trim() || undefined,
-        creditLimit: parseFloat(creditLimit),
-        paymentTerm: parseInt(paymentTerm),
-      });
-
-      alert('客户添加成功！');
-      onSubmit();
-    } catch (error) {
-      console.error('Failed to add customer:', error);
-      alert('添加客户失败，请重试');
+    } catch (err) {
+      console.error('Failed to save customer:', err);
+      error(isEditMode ? '更新客户失败，请重试' : '添加客户失败，请重试');
     }
   };
 
@@ -87,7 +119,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit }: AddCust
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">新增客户</h2>
+            <h2 className="text-xl font-bold">{isEditMode ? '编辑客户' : '新增客户'}</h2>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-6 h-6" />
             </button>
@@ -178,7 +210,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit }: AddCust
                 disabled={!name.trim()}
                 className="flex-1 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                确认添加
+                {isEditMode ? '确认修改' : '确认添加'}
               </button>
             </div>
           </form>

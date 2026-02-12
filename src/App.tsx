@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Users } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
+import { CustomModal } from './components/CustomModal';
+import { useModalStore } from './store/modalStore';
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'customers'>('dashboard');
+  const { isOpen, type, title, message, buttons, hide } = useModalStore();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,6 +41,15 @@ function App() {
           </button>
         </div>
       </nav>
+
+      <CustomModal
+        isOpen={isOpen}
+        type={type}
+        title={title}
+        message={message}
+        buttons={buttons}
+        onClose={hide}
+      />
     </div>
   );
 }

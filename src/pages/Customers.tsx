@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, Phone, ArrowLeft } from 'lucide-react';
+import { Plus, Phone } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
@@ -8,6 +8,7 @@ export default function Customers({ onBack }: { onBack: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
 
   useEffect(() => {
     fetchCustomers();
@@ -17,24 +18,28 @@ export default function Customers({ onBack }: { onBack: () => void }) {
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleEditCustomer = (customer: Customer) => {
+    setEditingCustomer(customer);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsAddDialogOpen(false);
+    setEditingCustomer(undefined);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4 mb-4">
-            <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <ArrowLeft className="w-6 h-6 text-gray-600" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">客户管理</h1>
-          </div>
+          <h1 className="text-xl font-bold text-gray-900 mb-4">客户管理</h1>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="搜索客户..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -56,7 +61,12 @@ export default function Customers({ onBack }: { onBack: () => void }) {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg">{customer.name}</h3>
+                    <h3 
+                      className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 transition-colors"
+                      onClick={() => handleEditCustomer(customer)}
+                    >
+                      {customer.name}
+                    </h3>
                     {customer.phone && (
                       <div className="flex items-center gap-2 mt-2 text-gray-500">
                         <Phone className="w-4 h-4" />
@@ -82,7 +92,10 @@ export default function Customers({ onBack }: { onBack: () => void }) {
       </main>
 
       <button
-        onClick={() => setIsAddDialogOpen(true)}
+        onClick={() => {
+          setEditingCustomer(undefined);
+          setIsAddDialogOpen(true);
+        }}
         className="fixed bottom-20 right-6 w-16 h-16 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center z-50"
       >
         <Plus className="w-8 h-8" />
@@ -90,11 +103,12 @@ export default function Customers({ onBack }: { onBack: () => void }) {
 
       <AddCustomerDialog
         isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
+        onClose={handleCloseDialog}
         onSubmit={() => {
-          setIsAddDialogOpen(false);
+          handleCloseDialog();
           fetchCustomers();
         }}
+        customer={editingCustomer}
       />
     </div>
   );

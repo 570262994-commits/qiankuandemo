@@ -2,8 +2,9 @@ import { useEffect, useState, useRef } from 'react';
 import { X, ChevronDown, Calendar, User } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
+import { useModalStore } from '../store/modalStore';
 import { TransactionType } from '../types';
-import type { Customer } from '../types';
+import type { Customer, Transaction } from '../types';
 import { format, addDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
@@ -11,9 +12,10 @@ interface TransactionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: () => void;
+  transaction?: Transaction;
 }
 
-export default function TransactionDrawer({ isOpen, onClose, onSubmit }: TransactionDrawerProps) {
+export default function TransactionDrawer({ isOpen, onClose, onSubmit, transaction }: TransactionDrawerProps) {
   const [type, setType] = useState<TransactionType>(TransactionType.DEBT);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [amount, setAmount] = useState('');
@@ -25,14 +27,31 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   
   const { customers, addCustomer, getCustomerByName } = useCustomerStore();
-  const { addTransaction } = useTransactionStore();
+  const { addTransaction, updateTransaction } = useTransactionStore();
+  const { warning, error, success } = useModalStore();
   const amountInputRef = useRef<HTMLInputElement>(null);
 
+  const isEditMode = !!transaction;
+
   useEffect(() => {
-    if (isOpen && amountInputRef.current) {
-      setTimeout(() => amountInputRef.current?.focus(), 300);
+    if (isOpen) {
+      if (transaction) {
+        setType(transaction.type);
+        setAmount(transaction.amount.toString());
+        setDate(format(new Date(transaction.occurredAt), 'yyyy-MM-dd'));
+        setNote(transaction.note || '');
+        const customer = customers.find(c => c.id === transaction.customerId);
+        if (customer) {
+          setSelectedCustomer(customer);
+        }
+      } else {
+        resetForm();
+      }
+      if (amountInputRef.current) {
+        setTimeout(() => amountInputRef.current?.focus(), 300);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, transaction, customers]);
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(customerSearch.toLowerCase())
@@ -40,39 +59,54 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
 
   const handleSubmit = async () => {
     if (!selectedCustomer) {
-      alert('请选择客户');
+      warning('请选择客户');
       return;
     }
     if (!amount || parseFloat(amount) <= 0) {
-      alert('请输入有效金额');
+      warning('请输入有效金额');
       return;
     }
 
     try {
       const customer = await getCustomerByName(selectedCustomer.name);
       if (!customer) {
-        alert('客户不存在');
+        error('客户不存在');
         return;
       }
 
       const occurredAt = new Date(date);
       const dueDate = addDays(occurredAt, customer.paymentTerm);
 
-      await addTransaction({
-        customerId: customer.id!,
-        type,
-        amount: parseFloat(amount),
-        occurredAt,
-        dueDate,
-        note: note || undefined,
-      });
+      if (isEditMode && transaction) {
+        await updateTransaction(transaction.id!, {
+          customerId: customer.id!,
+          type,
+          amount: parseFloat(amount),
+          occurredAt,
+          dueDate,
+          note: note || undefined,
+        });
 
-      alert('记录成功！');
-      onSubmit();
-      resetForm();
-    } catch (error) {
-      console.error('Failed to add transaction:', error);
-      alert('记录失败，请重试');
+        success('记录更新成功！');
+        onSubmit();
+        resetForm();
+      } else {
+        await addTransaction({
+          customerId: customer.id!,
+          type,
+          amount: parseFloat(amount),
+          occurredAt,
+          dueDate,
+          note: note || undefined,
+        });
+
+        success('记录成功！');
+        onSubmit();
+        resetForm();
+      }
+    } catch (err) {
+      console.error('Failed to save transaction:', err);
+      error(isEditMode ? '更新记录失败，请重试' : '记录失败，请重试');
     }
   };
 
@@ -89,14 +123,14 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
 
   const handleQuickAddCustomer = async () => {
     if (!customerSearch.trim()) {
-      alert('请输入客户名称');
+      warning('请输入客户名称');
       return;
     }
 
     try {
       const existingCustomer = await getCustomerByName(customerSearch);
       if (existingCustomer) {
-        alert('客户已存在');
+        warning('客户已存在');
         return;
       }
 
@@ -112,9 +146,9 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
       setShowAddCustomer(false);
       setShowCustomerDropdown(false);
       setCustomerSearch('');
-    } catch (error) {
-      console.error('Failed to add customer:', error);
-      alert('添加客户失败');
+    } catch (err) {
+      console.error('Failed to add customer:', err);
+      error('添加客户失败');
     }
   };
 
@@ -126,7 +160,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
       <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">记一笔</h2>
+            <h2 className="text-xl font-bold">{isEditMode ? '编辑记录' : '记一笔'}</h2>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
               <X className="w-6 h-6" />
             </button>
@@ -261,7 +295,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit }: Transac
               disabled={!selectedCustomer || !amount || parseFloat(amount) <= 0}
               className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 active:scale-98 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              确认提交
+              {isEditMode ? '确认修改' : '确认提交'}
             </button>
           </div>
         </div>

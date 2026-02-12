@@ -8,6 +8,7 @@ interface TransactionStore {
   loading: boolean;
   fetchTransactions: () => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => Promise<number>;
+  updateTransaction: (id: number, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: number) => Promise<void>;
   getRecentTransactions: (limit?: number) => Promise<Transaction[]>;
   getTransactionsByCustomerId: (customerId: number) => Promise<Transaction[]>;
@@ -38,6 +39,16 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       return id;
     } catch (error) {
       console.error('Failed to add transaction:', error);
+      throw error;
+    }
+  },
+
+  updateTransaction: async (id: number, transaction: Partial<Transaction>) => {
+    try {
+      await db.transactions.update(id, transaction);
+      await get().fetchTransactions();
+    } catch (error) {
+      console.error('Failed to update transaction:', error);
       throw error;
     }
   },
