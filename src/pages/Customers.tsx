@@ -65,34 +65,6 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
     setEditingCustomer(undefined);
   };
 
-  const formatCreditLimit = (limit: number) => {
-    if (limit === CREDIT_LIMIT_UNLIMITED) return '无限制';
-    return `¥${limit.toFixed(2)}`;
-  };
-
-  const formatRemainingCredit = (remaining: number, totalLimit: number) => {
-    if (totalLimit === CREDIT_LIMIT_UNLIMITED) return { text: '无限制', color: 'text-blue-600' };
-    
-    const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
-    
-    if (remaining <= 0) {
-      return { text: `¥${remaining.toFixed(2)}`, color: 'text-red-600' };
-    } else if (percentage < 20) {
-      return { text: `¥${remaining.toFixed(2)}`, color: 'text-yellow-600' };
-    } else {
-      return { text: `¥${remaining.toFixed(2)}`, color: 'text-emerald-600' };
-    }
-  };
-
-  const getRemainingCreditBgColor = (remaining: number, totalLimit: number) => {
-    if (totalLimit === CREDIT_LIMIT_UNLIMITED) return 'bg-blue-50';
-    if (remaining <= 0) return 'bg-red-50';
-    
-    const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
-    if (percentage < 20) return 'bg-yellow-50';
-    return 'bg-emerald-50';
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-10">
@@ -110,7 +82,7 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 pb-32">
         {filteredCustomers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <p className="text-lg">
@@ -120,45 +92,84 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
         ) : (
           <div className="space-y-3">
             {filteredCustomers.map((customer) => {
-              const remainingInfo = formatRemainingCredit(customer.remainingCredit, customer.creditLimit);
-              const bgColor = getRemainingCreditBgColor(customer.remainingCredit, customer.creditLimit);
-              
               return (
                 <div
                   key={customer.id}
+                  className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all"
                   onClick={() => handleEditCustomer(customer)}
-                  className={`rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all ${bgColor}`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 text-lg">
-                          {customer.name}
-                        </h3>
-                      </div>
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-bold text-gray-900 text-lg">
+                        {customer.name}
+                      </h3>
                       {customer.phone && (
-                        <div className="flex items-center gap-2 mt-2 text-gray-500">
-                          <Phone className="w-4 h-4" />
-                          <span className="text-sm">{customer.phone}</span>
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span className="text-xs">{customer.phone}</span>
                         </div>
                       )}
-                      <div className="mt-3 space-y-1.5 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">信用额度</span>
-                          <span className="font-medium">
-                            {formatCreditLimit(customer.creditLimit)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">剩余额度</span>
-                          <span className={`font-medium ${remainingInfo.color}`}>
-                            {remainingInfo.text}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">固定账期</span>
-                          <span className="font-medium">{customer.paymentTerm} 天</span>
-                        </div>
+                    </div>
+                    
+                    <div className="bg-slate-50 rounded-lg p-3 space-y-3 text-sm">
+                      {customer.creditLimit === CREDIT_LIMIT_UNLIMITED ? (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400">剩余额度</span>
+                            <span className="font-bold text-blue-700">不限额度</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400">信用额度</span>
+                            <span className="font-bold text-blue-700">不限额度</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-between items-baseline">
+                            <span className="text-gray-400">剩余额度/信用额度</span>
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-lg font-bold text-gray-900">
+                                ¥{Math.max(0, customer.remainingCredit).toFixed(0)}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                / ¥{customer.creditLimit.toFixed(0)}
+                              </span>
+                            </div>
+                          </div>
+                          {customer.creditLimit > 0 && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all ${
+                                    (() => {
+                                      const percentage = (customer.remainingCredit / customer.creditLimit) * 100;
+                                      if (percentage > 30) return 'bg-emerald-500';
+                                      if (percentage >= 10) return 'bg-amber-500';
+                                      return 'bg-rose-500';
+                                    })()
+                                  }`}
+                                  style={{ 
+                                    width: `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100))}%` 
+                                  }}
+                                />
+                              </div>
+                              <span className={`text-xs font-medium w-10 text-right ${
+                                (() => {
+                                  const percentage = (customer.remainingCredit / customer.creditLimit) * 100;
+                                  if (percentage > 30) return 'text-emerald-600';
+                                  if (percentage >= 10) return 'text-amber-600';
+                                  return 'text-rose-600';
+                                })()
+                              }`}>
+                                {Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100)).toFixed(0)}%
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">固定账期</span>
+                        <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
                       </div>
                     </div>
                   </div>
