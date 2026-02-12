@@ -189,7 +189,7 @@ export const supabaseApi = {
       id: data.id as number,
       name: data.name as string,
       phone: data.phone as string | undefined,
-      creditLimit: data.credit_limit as number | null,
+      creditLimit: data.credit_limit as number,
       paymentTerm: data.payment_term as number,
       createdAt: data.created_at ? new Date(data.created_at as string) : undefined,
     };

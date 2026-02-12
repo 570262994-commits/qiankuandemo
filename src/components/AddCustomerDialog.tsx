@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
 import { useToastStore } from '../store/toastStore';
+import { CREDIT_LIMIT_UNLIMITED } from '../types';
 import type { Customer } from '../types';
 
 interface AddCustomerDialogProps {
@@ -29,7 +30,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       if (customer) {
         setName(customer.name);
         setPhone(customer.phone || '');
-        if (customer.creditLimit === null) {
+        if (customer.creditLimit === CREDIT_LIMIT_UNLIMITED) {
           setIsUnlimitedCredit(true);
           setCreditLimit('0');
         } else {
@@ -69,7 +70,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       return;
     }
 
-    const finalCreditLimit = isUnlimitedCredit ? null : parseInt(creditLimit) || 0;
+    const finalCreditLimit = isUnlimitedCredit ? CREDIT_LIMIT_UNLIMITED : parseInt(creditLimit) || 0;
 
     if (!isUnlimitedCredit && parseInt(creditLimit) < 0) {
       warning('信用额度不能为负数');

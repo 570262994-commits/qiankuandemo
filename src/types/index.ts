@@ -5,11 +5,13 @@ export const TransactionType = {
 
 export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
 
+export const CREDIT_LIMIT_UNLIMITED = -1;
+
 export interface Customer {
   id?: number;
   name: string;
   phone?: string;
-  creditLimit: number | null;
+  creditLimit: number;
   paymentTerm: number;
   createdAt?: Date;
 }

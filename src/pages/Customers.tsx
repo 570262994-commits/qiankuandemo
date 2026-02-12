@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Plus, Phone } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
-import { TransactionType } from '../types';
+import { TransactionType, CREDIT_LIMIT_UNLIMITED } from '../types';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
 
@@ -10,7 +10,7 @@ interface CustomerWithCalculated extends Customer {
   totalDebt: number;
   totalPayment: number;
   balance: number;
-  remainingCredit: number | null;
+  remainingCredit: number;
 }
 
 export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
@@ -36,8 +36,8 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
         .reduce((sum, t) => sum + t.amount, 0);
       const balance = totalDebt - totalPayment;
       
-      let remainingCredit: number | null = null;
-      if (customer.creditLimit !== null) {
+      let remainingCredit = customer.creditLimit;
+      if (customer.creditLimit !== CREDIT_LIMIT_UNLIMITED) {
         remainingCredit = customer.creditLimit - balance;
       }
       
@@ -65,14 +65,13 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
     setEditingCustomer(undefined);
   };
 
-  const formatCreditLimit = (limit: number | null) => {
-    if (limit === null) return '无限制';
+  const formatCreditLimit = (limit: number) => {
+    if (limit === CREDIT_LIMIT_UNLIMITED) return '无限制';
     return `¥${limit.toFixed(2)}`;
   };
 
-  const formatRemainingCredit = (remaining: number | null, totalLimit: number | null) => {
-    if (totalLimit === null) return { text: '无限制', color: 'text-blue-600' };
-    if (remaining === null) return { text: '¥0.00', color: 'text-red-600' };
+  const formatRemainingCredit = (remaining: number, totalLimit: number) => {
+    if (totalLimit === CREDIT_LIMIT_UNLIMITED) return { text: '无限制', color: 'text-blue-600' };
     
     const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
     
@@ -85,9 +84,9 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
     }
   };
 
-  const getRemainingCreditBgColor = (remaining: number | null, totalLimit: number | null) => {
-    if (totalLimit === null) return 'bg-blue-50';
-    if (remaining === null || remaining <= 0) return 'bg-red-50';
+  const getRemainingCreditBgColor = (remaining: number, totalLimit: number) => {
+    if (totalLimit === CREDIT_LIMIT_UNLIMITED) return 'bg-blue-50';
+    if (remaining <= 0) return 'bg-red-50';
     
     const percentage = totalLimit > 0 ? (remaining / totalLimit) * 100 : 0;
     if (percentage < 20) return 'bg-yellow-50';

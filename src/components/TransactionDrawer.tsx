@@ -4,7 +4,7 @@ import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useModalStore } from '../store/modalStore';
 import { useToastStore } from '../store/toastStore';
-import { TransactionType } from '../types';
+import { TransactionType, CREDIT_LIMIT_UNLIMITED } from '../types';
 import type { Customer, Transaction } from '../types';
 import { format, addDays } from 'date-fns';
 
@@ -35,7 +35,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   const customerRemainingCredit = useMemo(() => {
     if (!selectedCustomer) return null;
     
-    if (selectedCustomer.creditLimit === null) return null;
+    if (selectedCustomer.creditLimit === CREDIT_LIMIT_UNLIMITED) return null;
     
     const customerTransactions = transactions.filter(t => t.customerId === selectedCustomer.id);
     const totalDebt = customerTransactions
@@ -166,11 +166,11 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
       const id = await addCustomer({
         name: customerSearch,
         phone: '',
-        creditLimit: null,
+        creditLimit: CREDIT_LIMIT_UNLIMITED,
         paymentTerm: 30,
       });
 
-      const newCustomer = { id, name: customerSearch, phone: '', creditLimit: null, paymentTerm: 30 };
+      const newCustomer = { id, name: customerSearch, phone: '', creditLimit: CREDIT_LIMIT_UNLIMITED, paymentTerm: 30 };
       setSelectedCustomer(newCustomer);
       setShowCustomerDropdown(false);
       setCustomerSearch('');
