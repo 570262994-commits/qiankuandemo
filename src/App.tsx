@@ -4,11 +4,14 @@ import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import SettingsPage from './pages/Settings';
 import { CustomModal } from './components/CustomModal';
+import { ToastContainer } from './components/Toast';
 import { useModalStore } from './store/modalStore';
+import { useToastStore } from './store/toastStore';
 
 function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'settings'>('dashboard');
   const { isOpen, type, title, message, buttons, hide } = useModalStore();
+  const { toasts, remove } = useToastStore();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,6 +61,8 @@ function App() {
         buttons={buttons}
         onClose={hide}
       />
+
+      <ToastContainer toasts={toasts} removeToast={remove} />
     </div>
   );
 }

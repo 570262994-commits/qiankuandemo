@@ -137,8 +137,8 @@ export default function Dashboard() {
                 }}
                 onClick={() => handleClick(transaction)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-gray-900">{getCustomerName(transaction.customerId)}</p>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeStyle(transaction.type)}`}>
@@ -154,7 +154,7 @@ export default function Dashboard() {
                         onClick={(e) => toggleNoteExpand(transaction.id!, e)}
                       >
                         <span className="text-gray-400 text-xs mt-0.5 flex-shrink-0">备注:</span>
-                        <div className="flex-1 flex items-start gap-1">
+                        <div className="flex-1 min-w-0 flex items-start gap-1">
                           <p className={`text-xs text-gray-600 leading-relaxed flex-1 ${
                             expandedNotes.has(transaction.id!) ? '' : 'line-clamp-1'
                           }`}>
@@ -173,7 +173,7 @@ export default function Dashboard() {
                       </div>
                     )}
                   </div>
-                  <div className="text-right self-start">
+                  <div className="flex-shrink-0 text-right">
                     <p className={`text-xl font-bold ${getAmountColor(transaction.type)}`}>
                       {formatAmount(transaction.amount, transaction.type)}
                     </p>

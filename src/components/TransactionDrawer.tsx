@@ -3,6 +3,7 @@ import { X, ChevronDown, User } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useModalStore } from '../store/modalStore';
+import { useToastStore } from '../store/toastStore';
 import { TransactionType } from '../types';
 import type { Customer, Transaction } from '../types';
 import { format, addDays } from 'date-fns';
@@ -25,7 +26,8 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   
   const { customers, addCustomer, getCustomerByName } = useCustomerStore();
   const { addTransaction, updateTransaction } = useTransactionStore();
-  const { warning, error, success } = useModalStore();
+  const { warning } = useModalStore();
+  const toast = useToastStore();
   const amountInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!transaction;
@@ -67,7 +69,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     try {
       const customer = await getCustomerByName(selectedCustomer.name);
       if (!customer) {
-        error('客户不存在');
+        toast.error('客户不存在');
         return;
       }
 
@@ -84,7 +86,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
           note: note || undefined,
         });
 
-        success('记录更新成功！');
+        toast.success('记录更新成功！');
         onSubmit();
         resetForm();
       } else {
@@ -97,13 +99,13 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
           note: note || undefined,
         });
 
-        success('记录成功！');
+        toast.success('记录成功！');
         onSubmit();
         resetForm();
       }
     } catch (err) {
       console.error('Failed to save transaction:', err);
-      error(isEditMode ? '更新记录失败，请重试' : '记录失败，请重试');
+      toast.error(isEditMode ? '更新记录失败，请重试' : '记录失败，请重试');
     }
   };
 
@@ -143,7 +145,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
       setCustomerSearch('');
     } catch (err) {
       console.error('Failed to add customer:', err);
-      error('添加客户失败');
+      toast.error('添加客户失败');
     }
   };
 
@@ -252,8 +254,8 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
+                  placeholder="0"
+                  step="1"
                   min="0"
                   className="w-full pl-12 pr-4 py-4 text-3xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                 />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
+import { useToastStore } from '../store/toastStore';
 import type { Customer } from '../types';
 
 interface AddCustomerDialogProps {
@@ -17,7 +18,8 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
   const [creditLimit, setCreditLimit] = useState('0');
   const [paymentTerm, setPaymentTerm] = useState('30');
   const { addCustomer, updateCustomer, getCustomerByName } = useCustomerStore();
-  const { warning, error, success } = useModalStore();
+  const { warning } = useModalStore();
+  const toast = useToastStore();
 
   const isEditMode = !!customer;
 
@@ -86,7 +88,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
           paymentTerm: parseInt(paymentTerm),
         });
 
-        success('客户信息更新成功！');
+        toast.success('客户信息更新成功！');
         onSubmit();
       } else {
         const existingCustomer = await getCustomerByName(name);
@@ -102,12 +104,12 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
           paymentTerm: parseInt(paymentTerm),
         });
 
-        success('客户添加成功！');
+        toast.success('客户添加成功！');
         onSubmit();
       }
     } catch (err) {
       console.error('Failed to save customer:', err);
-      error(isEditMode ? '更新客户失败，请重试' : '添加客户失败，请重试');
+      toast.error(isEditMode ? '更新客户失败，请重试' : '添加客户失败，请重试');
     }
   };
 
@@ -161,8 +163,8 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
                 type="number"
                 value={creditLimit}
                 onChange={(e) => setCreditLimit(e.target.value)}
-                placeholder="0.00"
-                step="0.01"
+                placeholder="0"
+                step="1"
                 min="0"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -185,7 +187,7 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
                   value={paymentTerm}
                   onChange={(e) => setPaymentTerm(Math.max(1, parseInt(e.target.value) || 1).toString())}
                   min="1"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-xl font-bold"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-xl font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
                   type="button"
