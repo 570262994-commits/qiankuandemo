@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { TransactionType } from '../types';
 import type { Transaction } from '../types';
 import { db } from '../db/db';
 

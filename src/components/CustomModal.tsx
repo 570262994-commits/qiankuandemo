@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
 
 export type ModalType = 'alert' | 'confirm' | 'success' | 'error' | 'warning';
 
-interface ModalButton {
+export interface ModalButton {
   text: string;
   onClick: () => void;
   style?: 'primary' | 'secondary' | 'danger';

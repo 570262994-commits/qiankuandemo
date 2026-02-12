@@ -4,7 +4,7 @@ import { useCustomerStore } from '../store/customerStore';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
 
-export default function Customers({ onBack }: { onBack: () => void }) {
+export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);

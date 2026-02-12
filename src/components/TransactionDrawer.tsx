@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { X, ChevronDown, Calendar, User } from 'lucide-react';
+import { X, ChevronDown, User } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useModalStore } from '../store/modalStore';
 import { TransactionType } from '../types';
 import type { Customer, Transaction } from '../types';
 import { format, addDays } from 'date-fns';
-import { zhCN } from 'date-fns/locale';
 
 interface TransactionDrawerProps {
   isOpen: boolean;
@@ -22,9 +21,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [note, setNote] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
-  const [showAddCustomer, setShowAddCustomer] = useState(false);
   
   const { customers, addCustomer, getCustomerByName } = useCustomerStore();
   const { addTransaction, updateTransaction } = useTransactionStore();
@@ -118,7 +115,6 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     setNote('');
     setCustomerSearch('');
     setShowCustomerDropdown(false);
-    setShowDatePicker(false);
   };
 
   const handleQuickAddCustomer = async () => {
@@ -143,7 +139,6 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
 
       const newCustomer = { id, name: customerSearch, phone: '', creditLimit: 0, paymentTerm: 30 };
       setSelectedCustomer(newCustomer);
-      setShowAddCustomer(false);
       setShowCustomerDropdown(false);
       setCustomerSearch('');
     } catch (err) {

@@ -1,7 +1,9 @@
-export enum TransactionType {
-  DEBT = 'DEBT',
-  PAYBACK = 'PAYBACK',
-}
+export const TransactionType = {
+  DEBT: 'DEBT',
+  PAYBACK: 'PAYBACK',
+} as const;
+
+export type TransactionType = typeof TransactionType[keyof typeof TransactionType];
 
 export interface Customer {
   id?: number;
