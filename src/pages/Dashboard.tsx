@@ -12,7 +12,7 @@ export default function Dashboard() {
   const { transactions, fetchTransactions, deleteTransaction } = useTransactionStore();
   const { customers, fetchCustomers } = useCustomerStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchCustomers();
@@ -48,7 +48,21 @@ export default function Dashboard() {
   };
 
   const getAmountColor = (type: TransactionType) => {
-    return type === TransactionType.DEBT ? 'text-red-500' : 'text-green-500';
+    return type === TransactionType.DEBT ? 'text-red-600' : 'text-emerald-600';
+  };
+
+  const getCardStyle = (type: TransactionType) => {
+    if (type === TransactionType.DEBT) {
+      return 'bg-red-50 border-l-4 border-red-400';
+    }
+    return 'bg-emerald-50 border-l-4 border-emerald-400';
+  };
+
+  const getTypeBadgeStyle = (type: TransactionType) => {
+    if (type === TransactionType.DEBT) {
+      return 'bg-red-100 text-red-700';
+    }
+    return 'bg-emerald-100 text-emerald-700';
   };
 
   return (
@@ -73,7 +87,7 @@ export default function Dashboard() {
             {transactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className="bg-white rounded-lg shadow-sm p-4 transition-all hover:shadow-md active:scale-95"
+                className={`rounded-lg shadow-sm p-4 transition-all hover:shadow-md active:scale-95 ${getCardStyle(transaction.type)}`}
                 onMouseDown={() => handleLongPressStart(transaction.id!)}
                 onMouseUp={handleLongPressEnd}
                 onMouseLeave={handleLongPressEnd}
@@ -82,7 +96,12 @@ export default function Dashboard() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{getCustomerName(transaction.customerId)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900">{getCustomerName(transaction.customerId)}</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeStyle(transaction.type)}`}>
+                        {transaction.type === TransactionType.DEBT ? '欠款' : '还款'}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-500 mt-1">
                       {format(new Date(transaction.occurredAt), 'yyyy-MM-dd', { locale: zhCN })}
                     </p>
@@ -91,11 +110,8 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className={`text-lg font-semibold ${getAmountColor(transaction.type)}`}>
+                    <p className={`text-xl font-bold ${getAmountColor(transaction.type)}`}>
                       {formatAmount(transaction.amount, transaction.type)}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {transaction.type === TransactionType.DEBT ? '欠款' : '还款'}
                     </p>
                   </div>
                 </div>
