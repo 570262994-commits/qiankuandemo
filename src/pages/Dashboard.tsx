@@ -1,15 +1,16 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, Filter } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, Filter, AlertTriangle, Bell } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
 import { TransactionType } from '../types';
 import type { Transaction } from '../types';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import TransactionDrawer from '../components/TransactionDrawer';
 
 type FilterType = 'all' | TransactionType;
+type CustomerFilterType = 'all' | 'overdue' | 'due_soon' | 'long_term';
 
 export default function Dashboard() {
   const { transactions, fetchTransactions, deleteTransaction } = useTransactionStore();
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [filterDate, setFilterDate] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [customerFilter, setCustomerFilter] = useState<CustomerFilterType>('all');
 
   useEffect(() => {
     fetchCustomers();
@@ -110,6 +112,102 @@ export default function Dashboard() {
   };
 
   const hasActiveFilters = searchText !== '' || filterDate !== '' || filterType !== 'all';
+
+  const customerStats = useMemo(() => {
+    const now = new Date();
+    let overdueCount = 0;
+    let overdueAmount = 0;
+    const dueSoonCustomers: { name: string; daysLeft: number; balance: number }[] = [];
+    const longTermCustomers: { name: string; paymentTerm: number }[] = [];
+
+    customers.forEach(customer => {
+      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+      const totalDebt = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalPayment = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalDebt - totalPayment;
+
+      if (balance <= 0) return;
+
+      const latestDebtTransaction = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+
+      if (!latestDebtTransaction) return;
+
+      const debtDate = new Date(latestDebtTransaction.occurredAt);
+      const paymentTerm = customer.paymentTerm || 0;
+      const dueDate = new Date(debtDate);
+      dueDate.setDate(dueDate.getDate() + paymentTerm);
+
+      const daysUntilDue = differenceInDays(dueDate, now);
+      const overdueDays = differenceInDays(now, dueDate);
+
+      if (paymentTerm > 30) {
+        longTermCustomers.push({ name: customer.name, paymentTerm });
+      }
+
+      if (overdueDays > 0) {
+        overdueCount++;
+        overdueAmount += balance;
+      } else if (daysUntilDue <= 7 && daysUntilDue >= 0) {
+        dueSoonCustomers.push({ name: customer.name, daysLeft: daysUntilDue, balance });
+      }
+    });
+
+    return {
+      overdueCount,
+      overdueAmount,
+      dueSoonCount: dueSoonCustomers.length,
+      longTermCount: longTermCustomers.length,
+    };
+  }, [customers, transactions]);
+
+  const filteredCustomers = useMemo(() => {
+    if (customerFilter === 'all') return null;
+
+    const now = new Date();
+    return customers.filter(customer => {
+      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+      const totalDebt = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalPayment = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalDebt - totalPayment;
+
+      if (balance <= 0) return false;
+
+      const latestDebtTransaction = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+
+      if (!latestDebtTransaction) return false;
+
+      const debtDate = new Date(latestDebtTransaction.occurredAt);
+      const paymentTerm = customer.paymentTerm || 0;
+      const dueDate = new Date(debtDate);
+      dueDate.setDate(dueDate.getDate() + paymentTerm);
+
+      const daysUntilDue = differenceInDays(dueDate, now);
+      const overdueDays = differenceInDays(now, dueDate);
+
+      switch (customerFilter) {
+        case 'overdue':
+          return overdueDays > 0;
+        case 'due_soon':
+          return daysUntilDue >= 0 && daysUntilDue <= 7;
+        case 'long_term':
+          return paymentTerm > 30;
+        default:
+          return false;
+      }
+    });
+  }, [customers, transactions, customerFilter]);
 
   const formatAmount = (amount: number, type: TransactionType) => {
     if (type === TransactionType.DEBT) {
@@ -227,7 +325,66 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        <div className="max-w-2xl mx-auto px-4 pb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setCustomerFilter('all')}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                customerFilter === 'all'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              全部
+            </button>
+            <button
+              onClick={() => setCustomerFilter('overdue')}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                customerFilter === 'overdue'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              已逾期
+            </button>
+            <button
+              onClick={() => setCustomerFilter('due_soon')}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
+                customerFilter === 'due_soon'
+                  ? 'bg-amber-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Bell className="w-3.5 h-3.5" />
+              7天内到期
+            </button>
+            <button
+              onClick={() => setCustomerFilter('long_term')}
+              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                customerFilter === 'long_term'
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              长期客户
+            </button>
+          </div>
+        </div>
       </header>
+
+      {customerStats.overdueCount > 0 && (
+        <div className="max-w-2xl mx-auto px-4 mt-2">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <div className="flex-1">
+              <span className="text-sm text-red-700">
+                当前共有 <strong>{customerStats.overdueCount}</strong> 位客户已逾期，涉及金额 <strong>¥{customerStats.overdueAmount.toFixed(2)}</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-2xl mx-auto px-4 py-6">
         {filteredTransactions.length === 0 ? (

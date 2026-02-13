@@ -1,16 +1,20 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Phone } from 'lucide-react';
+import { Plus, Phone, Bell, AlertTriangle } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { TransactionType, CREDIT_LIMIT_UNLIMITED } from '../types';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
+import { differenceInDays } from 'date-fns';
 
 interface CustomerWithCalculated extends Customer {
   totalDebt: number;
   totalPayment: number;
   balance: number;
   remainingCredit: number;
+  daysUntilDue: number;
+  isOverdue: boolean;
+  hasDebt: boolean;
 }
 
 export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
@@ -26,6 +30,8 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
   }, [fetchCustomers, fetchTransactions]);
 
   const customersWithCalculated: CustomerWithCalculated[] = useMemo(() => {
+    const now = new Date();
+    
     return customers.map(customer => {
       const customerTransactions = transactions.filter(t => t.customerId === customer.id);
       const totalDebt = customerTransactions
@@ -35,10 +41,29 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
         .filter(t => t.type === TransactionType.PAYBACK)
         .reduce((sum, t) => sum + t.amount, 0);
       const balance = totalDebt - totalPayment;
+      const hasDebt = balance > 0;
       
       let remainingCredit = customer.creditLimit;
       if (customer.creditLimit !== CREDIT_LIMIT_UNLIMITED) {
         remainingCredit = customer.creditLimit - balance;
+      }
+
+      let daysUntilDue = 0;
+      let isOverdue = false;
+      
+      if (hasDebt && customer.paymentTerm > 0) {
+        const latestDebtTransaction = customerTransactions
+          .filter(t => t.type === TransactionType.DEBT)
+          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+        
+        if (latestDebtTransaction) {
+          const debtDate = new Date(latestDebtTransaction.occurredAt);
+          const dueDate = new Date(debtDate);
+          dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
+          
+          daysUntilDue = differenceInDays(dueDate, now);
+          isOverdue = daysUntilDue < 0;
+        }
       }
       
       return {
@@ -47,6 +72,9 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
         totalPayment,
         balance,
         remainingCredit,
+        daysUntilDue,
+        isOverdue,
+        hasDebt,
       };
     });
   }, [customers, transactions]);
@@ -169,7 +197,31 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
                       )}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">固定账期</span>
-                        <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
+                        <div className="flex items-center gap-1">
+                          {customer.paymentTerm <= 0 || customer.paymentTerm === null ? (
+                            <span 
+                              className="text-blue-500 cursor-pointer hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditCustomer(customer);
+                              }}
+                            >
+                              未设置
+                            </span>
+                          ) : customer.isOverdue ? (
+                            <span className="flex items-center gap-1 text-red-600 font-bold">
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                              已逾期 {Math.abs(customer.daysUntilDue)} 天
+                            </span>
+                          ) : customer.daysUntilDue <= 3 ? (
+                            <span className="flex items-center gap-1 text-amber-600">
+                              <Bell className="w-3.5 h-3.5" />
+                              {customer.daysUntilDue} 天
+                            </span>
+                          ) : (
+                            <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
