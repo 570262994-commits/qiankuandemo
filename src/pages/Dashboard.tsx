@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, Filter, AlertTriangle, Bell } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, Filter, AlertTriangle, Bell, SlidersHorizontal } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
@@ -24,13 +24,30 @@ export default function Dashboard() {
   const [searchText, setSearchText] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [customerFilter, setCustomerFilter] = useState<CustomerFilterType>('all');
+  const [showOverdueAlert, setShowOverdueAlert] = useState(true);
 
   useEffect(() => {
     fetchCustomers();
     fetchTransactions();
   }, [fetchCustomers, fetchTransactions]);
+
+  // 筛选逻辑联动：逾期/到期筛选只与欠款相关
+  useEffect(() => {
+    // 当选择逾期或即将到期时，自动切换到欠款类型
+    if ((customerFilter === 'overdue' || customerFilter === 'due_soon') && filterType === TransactionType.PAYBACK) {
+      setFilterType(TransactionType.DEBT);
+    }
+  }, [customerFilter, filterType]);
+
+  // 当切换到还款类型时，重置客户账期筛选
+  const handleFilterTypeChange = (type: FilterType) => {
+    setFilterType(type);
+    if (type === TransactionType.PAYBACK && (customerFilter === 'overdue' || customerFilter === 'due_soon')) {
+      setCustomerFilter('all');
+    }
+  };
 
   const handleLongPressStart = (transactionId: number) => {
     setIsLongPress(false);
@@ -109,18 +126,37 @@ export default function Dashboard() {
       let daysUntilDue = 0;
       
       if (hasDebt && customer.paymentTerm > 0) {
-        const latestDebtTransaction = customerTransactions
-          .filter(t => t.type === TransactionType.DEBT)
-          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+        // 获取所有欠款交易并检查是否有任何一条逾期
+        const debtTransactions = customerTransactions
+          .filter(t => t.type === TransactionType.DEBT);
         
-        if (latestDebtTransaction) {
-          const debtDate = new Date(latestDebtTransaction.occurredAt);
+        // 检查是否有任何一条欠款记录逾期
+        for (const transaction of debtTransactions) {
+          const debtDate = new Date(transaction.occurredAt);
           const dueDate = new Date(debtDate);
           dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
           
-          daysUntilDue = differenceInDays(dueDate, now);
-          isOverdue = daysUntilDue < 0;
+          const transactionDaysUntilDue = differenceInDays(dueDate, now);
+          if (transactionDaysUntilDue < 0) {
+            isOverdue = true;
+            break; // 只要有一条逾期就标记为逾期
+          }
         }
+        
+        // 计算最近到期的欠款记录的剩余天数
+        let minDaysUntilDue = Infinity;
+        for (const transaction of debtTransactions) {
+          const debtDate = new Date(transaction.occurredAt);
+          const dueDate = new Date(debtDate);
+          dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
+          
+          const transactionDaysUntilDue = differenceInDays(dueDate, now);
+          if (transactionDaysUntilDue < minDaysUntilDue) {
+            minDaysUntilDue = transactionDaysUntilDue;
+          }
+        }
+        
+        daysUntilDue = minDaysUntilDue !== Infinity ? minDaysUntilDue : 0;
       }
       
       info[customer.id!] = { isOverdue, daysUntilDue, hasDebt };
@@ -129,55 +165,10 @@ export default function Dashboard() {
     return info;
   }, [customers, transactions]);
 
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((transaction) => {
-      const customerName = getCustomerName(transaction.customerId);
-      const matchesSearch = searchText === '' || 
-        customerName.toLowerCase().includes(searchText.toLowerCase());
-      
-      const transactionDate = format(new Date(transaction.occurredAt), 'yyyy-MM-dd');
-      const matchesDate = filterDate === '' || transactionDate === filterDate;
-      
-      const matchesType = filterType === 'all' || transaction.type === filterType;
-      
-      // 客户筛选逻辑
-      let matchesCustomerFilter = true;
-      if (customerFilter !== 'all') {
-        const dueInfo = customerDueInfo[transaction.customerId];
-        if (!dueInfo) return false;
-        
-        switch (customerFilter) {
-          case 'overdue':
-            matchesCustomerFilter = dueInfo.isOverdue && dueInfo.hasDebt;
-            break;
-          case 'due_soon':
-            matchesCustomerFilter = !dueInfo.isOverdue && dueInfo.daysUntilDue >= 0 && dueInfo.daysUntilDue <= 7 && dueInfo.hasDebt;
-            break;
-          case 'long_term':
-            const customer = customers.find(c => c.id === transaction.customerId);
-            matchesCustomerFilter = (customer?.paymentTerm || 0) > 30;
-            break;
-        }
-      }
-      
-      return matchesSearch && matchesDate && matchesType && matchesCustomerFilter;
-    });
-  }, [transactions, searchText, filterDate, filterType, customers, customerFilter, customerDueInfo]);
-
-  const clearFilters = () => {
-    setSearchText('');
-    setFilterDate('');
-    setFilterType('all');
-  };
-
-  const hasActiveFilters = searchText !== '' || filterDate !== '' || filterType !== 'all';
-
-  const customerStats = useMemo(() => {
+  // 逾期交易ID列表需要在filteredTransactions之前计算
+  const overdueTransactionIds = useMemo(() => {
     const now = new Date();
-    let overdueCount = 0;
-    let overdueAmount = 0;
-    const dueSoonCustomers: { name: string; daysLeft: number; balance: number }[] = [];
-    const longTermCustomers: { name: string; paymentTerm: number }[] = [];
+    const ids: number[] = [];
 
     customers.forEach(customer => {
       const customerTransactions = transactions.filter(t => t.customerId === customer.id);
@@ -191,29 +182,207 @@ export default function Dashboard() {
 
       if (balance <= 0) return;
 
-      const latestDebtTransaction = customerTransactions
-        .filter(t => t.type === TransactionType.DEBT)
-        .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
-
-      if (!latestDebtTransaction) return;
-
-      const debtDate = new Date(latestDebtTransaction.occurredAt);
       const paymentTerm = customer.paymentTerm || 0;
-      const dueDate = new Date(debtDate);
-      dueDate.setDate(dueDate.getDate() + paymentTerm);
+      
+      const debtTransactions = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+      
+      const paymentTransactions = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
 
-      const daysUntilDue = differenceInDays(dueDate, now);
-      const overdueDays = differenceInDays(now, dueDate);
+      const debtRemainingMap: Record<number, number> = {};
+      
+      debtTransactions.forEach(debt => {
+        debtRemainingMap[debt.id!] = debt.amount;
+      });
+
+      paymentTransactions.forEach(payment => {
+        let remainingPayment = payment.amount;
+        for (const debt of debtTransactions) {
+          if (remainingPayment <= 0) break;
+          const debtRemaining = debtRemainingMap[debt.id!];
+          if (debtRemaining > 0) {
+            const deduction = Math.min(debtRemaining, remainingPayment);
+            debtRemainingMap[debt.id!] -= deduction;
+            remainingPayment -= deduction;
+          }
+        }
+      });
+
+      for (const debt of debtTransactions) {
+        const debtRemaining = debtRemainingMap[debt.id!];
+        if (debtRemaining <= 0) continue;
+
+        const debtDate = new Date(debt.occurredAt);
+        const dueDate = new Date(debtDate);
+        dueDate.setDate(dueDate.getDate() + paymentTerm);
+        
+        const transactionDaysUntilDue = differenceInDays(dueDate, now);
+        
+        if (transactionDaysUntilDue < 0) {
+          ids.push(debt.id!);
+        }
+      }
+    });
+
+    return ids;
+  }, [customers, transactions]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const customerName = getCustomerName(transaction.customerId);
+      const matchesSearch = searchText === '' || 
+        customerName.toLowerCase().includes(searchText.toLowerCase());
+      
+      const transactionDate = format(new Date(transaction.occurredAt), 'yyyy-MM-dd');
+      const matchesDate = filterDate === '' || transactionDate === filterDate;
+      
+      const matchesType = filterType === 'all' || transaction.type === filterType;
+      
+      // 客户筛选逻辑 - 只对欠款交易生效
+      let matchesCustomerFilter = true;
+      if (customerFilter !== 'all') {
+        // 还款交易不受账期筛选影响
+        if (transaction.type === TransactionType.PAYBACK) {
+          matchesCustomerFilter = true;
+        } else {
+          const dueInfo = customerDueInfo[transaction.customerId];
+          if (!dueInfo) return false;
+          
+          switch (customerFilter) {
+            case 'overdue':
+              matchesCustomerFilter = overdueTransactionIds.includes(transaction.id!);
+              break;
+            case 'due_soon':
+              matchesCustomerFilter = !dueInfo.isOverdue && dueInfo.daysUntilDue >= 0 && dueInfo.daysUntilDue <= 7 && dueInfo.hasDebt;
+              break;
+            case 'long_term':
+              const customer = customers.find(c => c.id === transaction.customerId);
+              matchesCustomerFilter = (customer?.paymentTerm || 0) > 30;
+              break;
+          }
+        }
+      }
+      
+      return matchesSearch && matchesDate && matchesType && matchesCustomerFilter;
+    });
+  }, [transactions, searchText, filterDate, filterType, customers, customerFilter, customerDueInfo, overdueTransactionIds]);
+
+  const clearFilters = () => {
+    setSearchText('');
+    setFilterDate('');
+    setFilterType('all');
+    setCustomerFilter('all');
+  };
+
+  const hasActiveFilters = searchText !== '' || filterDate !== '' || filterType !== 'all' || customerFilter !== 'all';
+
+  // 获取筛选摘要文本
+  const getFilterSummary = () => {
+    const parts: string[] = [];
+    if (filterType !== 'all') {
+      parts.push(filterType === TransactionType.DEBT ? '欠款' : '还款');
+    }
+    if (customerFilter !== 'all') {
+      const customerFilterMap: Record<CustomerFilterType, string> = {
+        'all': '',
+        'overdue': '已逾期',
+        'due_soon': '7天内到期',
+        'long_term': '长期客户'
+      };
+      parts.push(customerFilterMap[customerFilter]);
+    }
+    if (filterDate) {
+      parts.push(filterDate);
+    }
+    return parts.length > 0 ? parts.join(' · ') : '筛选';
+  };
+
+  const customerStats = useMemo(() => {
+    const now = new Date();
+    let overdueCount = 0;
+    let overdueAmount = 0;
+    const dueSoonCustomers: { name: string; daysLeft: number; balance: number }[] = [];
+    const longTermCustomers: { name: string; paymentTerm: number }[] = [];
+    const overdueTransactionIds: number[] = [];
+
+    customers.forEach(customer => {
+      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+      const totalDebt = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalPayment = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalDebt - totalPayment;
+
+      if (balance <= 0) return;
+
+      const paymentTerm = customer.paymentTerm || 0;
+      
+      const debtTransactions = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+      
+      const paymentTransactions = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+
+      let remainingDebtAmount = 0;
+      const debtRemainingMap: Record<number, number> = {};
+      
+      debtTransactions.forEach(debt => {
+        debtRemainingMap[debt.id!] = debt.amount;
+        remainingDebtAmount += debt.amount;
+      });
+
+      paymentTransactions.forEach(payment => {
+        let remainingPayment = payment.amount;
+        for (const debt of debtTransactions) {
+          if (remainingPayment <= 0) break;
+          const debtRemaining = debtRemainingMap[debt.id!];
+          if (debtRemaining > 0) {
+            const deduction = Math.min(debtRemaining, remainingPayment);
+            debtRemainingMap[debt.id!] -= deduction;
+            remainingPayment -= deduction;
+          }
+        }
+      });
+
+      let customerOverdueAmount = 0;
+      let isOverdue = false;
+      let minDaysUntilDue = Infinity;
+
+      for (const debt of debtTransactions) {
+        const debtRemaining = debtRemainingMap[debt.id!];
+        if (debtRemaining <= 0) continue;
+
+        const debtDate = new Date(debt.occurredAt);
+        const dueDate = new Date(debtDate);
+        dueDate.setDate(dueDate.getDate() + paymentTerm);
+        
+        const transactionDaysUntilDue = differenceInDays(dueDate, now);
+        
+        if (transactionDaysUntilDue < 0) {
+          isOverdue = true;
+          customerOverdueAmount += debtRemaining;
+          overdueTransactionIds.push(debt.id!);
+        } else if (transactionDaysUntilDue < minDaysUntilDue) {
+          minDaysUntilDue = transactionDaysUntilDue;
+        }
+      }
 
       if (paymentTerm > 30) {
         longTermCustomers.push({ name: customer.name, paymentTerm });
       }
 
-      if (overdueDays > 0) {
+      if (isOverdue) {
         overdueCount++;
-        overdueAmount += balance;
-      } else if (daysUntilDue <= 7 && daysUntilDue >= 0) {
-        dueSoonCustomers.push({ name: customer.name, daysLeft: daysUntilDue, balance });
+        overdueAmount += customerOverdueAmount;
+      } else if (minDaysUntilDue !== Infinity && minDaysUntilDue <= 7 && minDaysUntilDue >= 0) {
+        dueSoonCustomers.push({ name: customer.name, daysLeft: minDaysUntilDue, balance });
       }
     });
 
@@ -222,10 +391,9 @@ export default function Dashboard() {
       overdueAmount,
       dueSoonCount: dueSoonCustomers.length,
       longTermCount: longTermCustomers.length,
+      overdueTransactionIds,
     };
   }, [customers, transactions]);
-
-
 
   const formatAmount = (amount: number, type: TransactionType) => {
     if (type === TransactionType.DEBT) {
@@ -255,10 +423,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">客户欠款助手</h1>
-        </div>
-        <div className="max-w-2xl mx-auto px-4 pb-3">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <h1 className="text-xl font-bold text-gray-900 mb-3">欠款管理</h1>
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -279,127 +445,231 @@ export default function Dashboard() {
               )}
             </div>
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg border transition-colors ${
-                showFilters || hasActiveFilters
+              onClick={() => setShowFilterPanel(true)}
+              className={`px-3 py-2 rounded-lg border transition-colors flex items-center gap-1.5 ${
+                hasActiveFilters
                   ? 'bg-blue-50 border-blue-300 text-blue-600'
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <Filter className="w-5 h-5" />
-            </button>
-          </div>
-          {showFilters && (
-            <div className="mt-3 flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    filterType === 'all'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  全部
-                </button>
-                <button
-                  onClick={() => setFilterType(TransactionType.DEBT)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    filterType === TransactionType.DEBT
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  欠款
-                </button>
-                <button
-                  onClick={() => setFilterType(TransactionType.PAYBACK)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                    filterType === TransactionType.PAYBACK
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  还款
-                </button>
-              </div>
+              <SlidersHorizontal className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {hasActiveFilters ? getFilterSummary() : '筛选'}
+              </span>
               {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  清除筛选
-                </button>
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
               )}
-            </div>
-          )}
-        </div>
-        <div className="max-w-2xl mx-auto px-4 pb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setCustomerFilter('all')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                customerFilter === 'all'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              全部
-            </button>
-            <button
-              onClick={() => setCustomerFilter('overdue')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                customerFilter === 'overdue'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              已逾期
-            </button>
-            <button
-              onClick={() => setCustomerFilter('due_soon')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                customerFilter === 'due_soon'
-                  ? 'bg-amber-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <Bell className="w-3.5 h-3.5" />
-              7天内到期
-            </button>
-            <button
-              onClick={() => setCustomerFilter('long_term')}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                customerFilter === 'long_term'
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              长期客户
             </button>
           </div>
         </div>
       </header>
 
-      {customerStats.overdueCount > 0 && (
+      {/* 侧边筛选面板 */}
+      {showFilterPanel && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={() => setShowFilterPanel(false)}
+          />
+          <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-xl z-50 flex flex-col">
+            {/* 面板头部 */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900">筛选条件</h2>
+              <button
+                onClick={() => setShowFilterPanel(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* 筛选内容 */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* 交易类型 */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">交易类型</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleFilterTypeChange('all')}
+                    className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-colors ${
+                      filterType === 'all'
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    全部
+                  </button>
+                  <button
+                    onClick={() => handleFilterTypeChange(TransactionType.DEBT)}
+                    className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-colors ${
+                      filterType === TransactionType.DEBT
+                        ? 'bg-red-500 text-white border-red-500'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    欠款
+                  </button>
+                  <button
+                    onClick={() => handleFilterTypeChange(TransactionType.PAYBACK)}
+                    className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-colors ${
+                      filterType === TransactionType.PAYBACK
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    还款
+                  </button>
+                </div>
+              </div>
+
+              {/* 日期筛选 */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">交易日期</h3>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="date"
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  {filterDate && (
+                    <button
+                      onClick={() => setFilterDate('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 客户筛选 - 只在欠款或全部时显示 */}
+              {(filterType === 'all' || filterType === TransactionType.DEBT) && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">客户账期</h3>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setCustomerFilter('all')}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                        customerFilter === 'all'
+                          ? 'bg-blue-50 border-blue-200 text-blue-700'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        customerFilter === 'all' ? 'border-blue-500' : 'border-gray-300'
+                      }`}>
+                        {customerFilter === 'all' && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
+                      </div>
+                      <span className="text-sm">全部客户</span>
+                    </button>
+                    <button
+                      onClick={() => setCustomerFilter('overdue')}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                        customerFilter === 'overdue'
+                          ? 'bg-red-50 border-red-200 text-red-700'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        customerFilter === 'overdue' ? 'border-red-500' : 'border-gray-300'
+                      }`}>
+                        {customerFilter === 'overdue' && <div className="w-2.5 h-2.5 bg-red-500 rounded-full" />}
+                      </div>
+                      <AlertTriangle className="w-4 h-4" />
+                      <span className="text-sm">已逾期</span>
+                    </button>
+                    <button
+                      onClick={() => setCustomerFilter('due_soon')}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                        customerFilter === 'due_soon'
+                          ? 'bg-amber-50 border-amber-200 text-amber-700'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        customerFilter === 'due_soon' ? 'border-amber-500' : 'border-gray-300'
+                      }`}
+                      >
+                        {customerFilter === 'due_soon' && <div className="w-2.5 h-2.5 bg-amber-500 rounded-full" />}
+                      </div>
+                      <Bell className="w-4 h-4" />
+                      <span className="text-sm">7天内到期</span>
+                    </button>
+                    <button
+                      onClick={() => setCustomerFilter('long_term')}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${
+                        customerFilter === 'long_term'
+                          ? 'bg-purple-50 border-purple-200 text-purple-700'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        customerFilter === 'long_term' ? 'border-purple-500' : 'border-gray-300'
+                      }`}>
+                        {customerFilter === 'long_term' && <div className="w-2.5 h-2.5 bg-purple-500 rounded-full" />}
+                      </div>
+                      <span className="text-sm">长期客户（账期&gt;30天）</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 还款时的提示 */}
+              {filterType === TransactionType.PAYBACK && (
+                <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-500">
+                  <p>还款记录不支持按账期筛选</p>
+                </div>
+              )}
+            </div>
+
+            {/* 面板底部 */}
+            <div className="border-t border-gray-100 p-4 space-y-3">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="w-full py-2.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  清除所有筛选
+                </button>
+              )}
+              <button
+                onClick={() => setShowFilterPanel(false)}
+                className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                查看结果 ({filteredTransactions.length}条)
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {customerStats.overdueCount > 0 && showOverdueAlert && (
         <div className="max-w-2xl mx-auto px-4 mt-2">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3">
+          <div 
+            className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-red-100 transition-colors"
+            onClick={() => {
+              setFilterType(TransactionType.DEBT);
+              setCustomerFilter('overdue');
+            }}
+          >
             <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
             <div className="flex-1">
               <span className="text-sm text-red-700">
                 当前共有 <strong>{customerStats.overdueCount}</strong> 位客户已逾期，涉及金额 <strong>¥{customerStats.overdueAmount.toFixed(2)}</strong>
               </span>
             </div>
+            <button 
+              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowOverdueAlert(false);
+              }}
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}

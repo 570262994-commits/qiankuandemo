@@ -53,7 +53,7 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 pb-24">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">设置</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">数据同步</h1>
 
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">数据备份</h2>

@@ -52,18 +52,37 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
       let isOverdue = false;
       
       if (hasDebt && customer.paymentTerm > 0) {
-        const latestDebtTransaction = customerTransactions
-          .filter(t => t.type === TransactionType.DEBT)
-          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+        // 获取所有欠款交易并检查是否有任何一条逾期
+        const debtTransactions = customerTransactions
+          .filter(t => t.type === TransactionType.DEBT);
         
-        if (latestDebtTransaction) {
-          const debtDate = new Date(latestDebtTransaction.occurredAt);
+        // 检查是否有任何一条欠款记录逾期
+        for (const transaction of debtTransactions) {
+          const debtDate = new Date(transaction.occurredAt);
           const dueDate = new Date(debtDate);
           dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
           
-          daysUntilDue = differenceInDays(dueDate, now);
-          isOverdue = daysUntilDue < 0;
+          const transactionDaysUntilDue = differenceInDays(dueDate, now);
+          if (transactionDaysUntilDue < 0) {
+            isOverdue = true;
+            break; // 只要有一条逾期就标记为逾期
+          }
         }
+        
+        // 计算最近到期的欠款记录的剩余天数
+        let minDaysUntilDue = Infinity;
+        for (const transaction of debtTransactions) {
+          const debtDate = new Date(transaction.occurredAt);
+          const dueDate = new Date(debtDate);
+          dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
+          
+          const transactionDaysUntilDue = differenceInDays(dueDate, now);
+          if (transactionDaysUntilDue < minDaysUntilDue) {
+            minDaysUntilDue = transactionDaysUntilDue;
+          }
+        }
+        
+        daysUntilDue = minDaysUntilDue !== Infinity ? minDaysUntilDue : 0;
       }
       
       return {
@@ -97,7 +116,7 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900 mb-4">客户管理</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-4">客户档案</h1>
           <div className="relative">
             <input
               type="text"
@@ -197,7 +216,7 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
                       )}
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">固定账期</span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-2">
                           {customer.paymentTerm <= 0 || customer.paymentTerm === null ? (
                             <span 
                               className="text-blue-500 cursor-pointer hover:underline"
@@ -208,18 +227,21 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
                             >
                               未设置
                             </span>
-                          ) : customer.isOverdue ? (
-                            <span className="flex items-center gap-1 text-red-600 font-bold">
-                              <AlertTriangle className="w-3.5 h-3.5" />
-                              已逾期 {Math.abs(customer.daysUntilDue)} 天
-                            </span>
                           ) : (
-                            <span className="flex items-center gap-1 font-bold text-gray-900">
-                              {customer.paymentTerm} 天
-                              {customer.daysUntilDue <= 3 && customer.hasDebt && (
-                                <Bell className="w-3.5 h-3.5 text-amber-500" />
-                              )}
-                            </span>
+                            <>
+                              <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
+                              {customer.isOverdue ? (
+                                <span className="flex items-center gap-1 text-red-600 font-bold">
+                                  <AlertTriangle className="w-3.5 h-3.5" />
+                                  已逾期 {Math.abs(customer.daysUntilDue)} 天
+                                </span>
+                              ) : customer.daysUntilDue <= 3 && customer.hasDebt ? (
+                                <span className="flex items-center gap-1 text-amber-500">
+                                  <Bell className="w-3.5 h-3.5" />
+                                  剩余 {customer.daysUntilDue} 天
+                                </span>
+                              ) : null}
+                            </>
                           )}
                         </div>
                       </div>
