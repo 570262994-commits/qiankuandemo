@@ -90,6 +90,45 @@ export default function Dashboard() {
     return customer?.name || '未知客户';
   };
 
+  const customerDueInfo = useMemo(() => {
+    const now = new Date();
+    const info: Record<number, { isOverdue: boolean; daysUntilDue: number; hasDebt: boolean }> = {};
+    
+    customers.forEach(customer => {
+      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+      const totalDebt = customerTransactions
+        .filter(t => t.type === TransactionType.DEBT)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const totalPayment = customerTransactions
+        .filter(t => t.type === TransactionType.PAYBACK)
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = totalDebt - totalPayment;
+      const hasDebt = balance > 0;
+      
+      let isOverdue = false;
+      let daysUntilDue = 0;
+      
+      if (hasDebt && customer.paymentTerm > 0) {
+        const latestDebtTransaction = customerTransactions
+          .filter(t => t.type === TransactionType.DEBT)
+          .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
+        
+        if (latestDebtTransaction) {
+          const debtDate = new Date(latestDebtTransaction.occurredAt);
+          const dueDate = new Date(debtDate);
+          dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
+          
+          daysUntilDue = differenceInDays(dueDate, now);
+          isOverdue = daysUntilDue < 0;
+        }
+      }
+      
+      info[customer.id!] = { isOverdue, daysUntilDue, hasDebt };
+    });
+    
+    return info;
+  }, [customers, transactions]);
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter((transaction) => {
       const customerName = getCustomerName(transaction.customerId);
@@ -101,9 +140,29 @@ export default function Dashboard() {
       
       const matchesType = filterType === 'all' || transaction.type === filterType;
       
-      return matchesSearch && matchesDate && matchesType;
+      // 客户筛选逻辑
+      let matchesCustomerFilter = true;
+      if (customerFilter !== 'all') {
+        const dueInfo = customerDueInfo[transaction.customerId];
+        if (!dueInfo) return false;
+        
+        switch (customerFilter) {
+          case 'overdue':
+            matchesCustomerFilter = dueInfo.isOverdue && dueInfo.hasDebt;
+            break;
+          case 'due_soon':
+            matchesCustomerFilter = !dueInfo.isOverdue && dueInfo.daysUntilDue >= 0 && dueInfo.daysUntilDue <= 7 && dueInfo.hasDebt;
+            break;
+          case 'long_term':
+            const customer = customers.find(c => c.id === transaction.customerId);
+            matchesCustomerFilter = (customer?.paymentTerm || 0) > 30;
+            break;
+        }
+      }
+      
+      return matchesSearch && matchesDate && matchesType && matchesCustomerFilter;
     });
-  }, [transactions, searchText, filterDate, filterType, customers]);
+  }, [transactions, searchText, filterDate, filterType, customers, customerFilter, customerDueInfo]);
 
   const clearFilters = () => {
     setSearchText('');
@@ -166,48 +225,7 @@ export default function Dashboard() {
     };
   }, [customers, transactions]);
 
-  const filteredCustomers = useMemo(() => {
-    if (customerFilter === 'all') return null;
 
-    const now = new Date();
-    return customers.filter(customer => {
-      const customerTransactions = transactions.filter(t => t.customerId === customer.id);
-      const totalDebt = customerTransactions
-        .filter(t => t.type === TransactionType.DEBT)
-        .reduce((sum, t) => sum + t.amount, 0);
-      const totalPayment = customerTransactions
-        .filter(t => t.type === TransactionType.PAYBACK)
-        .reduce((sum, t) => sum + t.amount, 0);
-      const balance = totalDebt - totalPayment;
-
-      if (balance <= 0) return false;
-
-      const latestDebtTransaction = customerTransactions
-        .filter(t => t.type === TransactionType.DEBT)
-        .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())[0];
-
-      if (!latestDebtTransaction) return false;
-
-      const debtDate = new Date(latestDebtTransaction.occurredAt);
-      const paymentTerm = customer.paymentTerm || 0;
-      const dueDate = new Date(debtDate);
-      dueDate.setDate(dueDate.getDate() + paymentTerm);
-
-      const daysUntilDue = differenceInDays(dueDate, now);
-      const overdueDays = differenceInDays(now, dueDate);
-
-      switch (customerFilter) {
-        case 'overdue':
-          return overdueDays > 0;
-        case 'due_soon':
-          return daysUntilDue >= 0 && daysUntilDue <= 7;
-        case 'long_term':
-          return paymentTerm > 30;
-        default:
-          return false;
-      }
-    });
-  }, [customers, transactions, customerFilter]);
 
   const formatAmount = (amount: number, type: TransactionType) => {
     if (type === TransactionType.DEBT) {

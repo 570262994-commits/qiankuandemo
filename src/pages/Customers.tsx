@@ -213,13 +213,13 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
                               <AlertTriangle className="w-3.5 h-3.5" />
                               已逾期 {Math.abs(customer.daysUntilDue)} 天
                             </span>
-                          ) : customer.daysUntilDue <= 3 ? (
-                            <span className="flex items-center gap-1 text-amber-600">
-                              <Bell className="w-3.5 h-3.5" />
-                              {customer.daysUntilDue} 天
-                            </span>
                           ) : (
-                            <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
+                            <span className="flex items-center gap-1 font-bold text-gray-900">
+                              {customer.paymentTerm} 天
+                              {customer.daysUntilDue <= 3 && customer.hasDebt && (
+                                <Bell className="w-3.5 h-3.5 text-amber-500" />
+                              )}
+                            </span>
                           )}
                         </div>
                       </div>
