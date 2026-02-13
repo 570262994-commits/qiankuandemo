@@ -235,7 +235,11 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
                                   <AlertTriangle className="w-3.5 h-3.5" />
                                   已逾期 {Math.abs(customer.daysUntilDue)} 天
                                 </span>
-                              ) : customer.daysUntilDue <= 3 && customer.hasDebt ? (
+                              ) : customer.hasDebt && customer.daysUntilDue === 0 ? (
+                                <span className="flex items-center gap-1 text-orange-500">
+                                  今日到期
+                                </span>
+                              ) : customer.hasDebt && customer.daysUntilDue <= 3 ? (
                                 <span className="flex items-center gap-1 text-amber-500">
                                   <Bell className="w-3.5 h-3.5" />
                                   剩余 {customer.daysUntilDue} 天
