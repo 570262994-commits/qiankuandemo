@@ -60,49 +60,51 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen ${viewMode === 'collection' ? 'bg-red-50/30' : 'bg-gray-50'}`}>
+    <div className="min-h-screen bg-slate-50">
       {currentView === 'dashboard' && <Dashboard />}
       {currentView === 'customers' && <Customers onBack={() => setCurrentView('dashboard')} />}
       {currentView === 'settings' && <SettingsPage />}
 
       {/* 顶部双看板切换 Tab - 仅在首页显示 */}
       {currentView === 'dashboard' && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
-          <div className="max-w-2xl mx-auto flex">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-slate-50">
+          <div className="max-w-2xl mx-auto flex p-2 gap-1">
             <button
               onClick={() => setViewMode('collection')}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all ${
+              className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all relative ${
                 viewMode === 'collection'
-                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <AlertTriangle className="w-5 h-5" />
-              <span className="font-medium">异常提醒</span>
+              <AlertTriangle className="w-4 h-4" />
+              <span className="font-medium text-sm">异常提醒</span>
               {stats.alertCount > 0 && (
-                <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                  viewMode === 'collection' ? 'bg-white/20' : 'bg-red-100 text-red-600'
-                }`}>
+                <span className="px-1.5 py-0.5 text-xs rounded-full bg-red-100 text-red-600">
                   {stats.alertCount}
                 </span>
+              )}
+              {viewMode === 'collection' && (
+                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-red-500 rounded-full" />
               )}
             </button>
             <button
               onClick={() => setViewMode('journal')}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 transition-all ${
+              className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-lg transition-all relative ${
                 viewMode === 'journal'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <Receipt className="w-5 h-5" />
-              <span className="font-medium">收支明细</span>
+              <Receipt className="w-4 h-4" />
+              <span className="font-medium text-sm">收支明细</span>
               {stats.todayCount > 0 && (
-                <span className={`px-1.5 py-0.5 text-xs rounded-full ${
-                  viewMode === 'journal' ? 'bg-white/20' : 'bg-blue-100 text-blue-600'
-                }`}>
+                <span className="px-1.5 py-0.5 text-xs rounded-full bg-blue-100 text-blue-600">
                   {stats.todayCount}
                 </span>
+              )}
+              {viewMode === 'journal' && (
+                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-blue-500 rounded-full" />
               )}
             </button>
           </div>

@@ -13,7 +13,7 @@ import TransactionDrawer from '../components/TransactionDrawer';
 type FilterType = 'all' | TransactionType;
 type CustomerFilterType = 'all' | 'overdue' | 'due_soon' | 'long_term';
 type OverdueDepthType = 'all' | 'week' | 'month' | 'over_month';
-  type BillStatusType = 'all' | 'overdue' | 'due_soon';
+type BillStatusType = 'all' | 'overdue' | 'due_soon';
 
 interface OverdueTransaction {
   id: number;
@@ -629,21 +629,18 @@ export default function Dashboard() {
   };
 
   const getAmountColor = (type: TransactionType) => {
-    return type === TransactionType.DEBT ? 'text-red-600' : 'text-emerald-600';
+    return type === TransactionType.DEBT ? 'text-rose-600' : 'text-emerald-600';
   };
 
   const getCardStyle = (type: TransactionType) => {
-    if (type === TransactionType.DEBT) {
-      return 'bg-red-50 border-l-4 border-red-400';
-    }
-    return 'bg-emerald-50 border-l-4 border-emerald-400';
+    return 'bg-white shadow-sm';
   };
 
   const getTypeBadgeStyle = (type: TransactionType) => {
     if (type === TransactionType.DEBT) {
-      return 'bg-red-100 text-red-700';
+      return 'bg-rose-50 text-rose-600';
     }
-    return 'bg-emerald-100 text-emerald-700';
+    return 'bg-emerald-50 text-emerald-600';
   };
 
   // 催收模式渲染
@@ -651,33 +648,44 @@ export default function Dashboard() {
     <>
       {/* 统计卡片 - 只保留逾期总额 */}
       <div className="max-w-2xl mx-auto px-4 py-3 mt-12">
-        <div className="bg-white rounded-lg p-4 border border-red-200">
-          <div className="text-red-500 text-xs mb-1 flex items-center gap-1">
+        <div className={`bg-white rounded-xl p-4 shadow-sm ${stats.overdueAmount === 0 ? '' : ''}`}>
+          <div className={`text-xs mb-1 flex items-center gap-1 ${stats.overdueAmount > 0 ? 'text-rose-500' : 'text-gray-400'}`}>
             <AlertTriangle className="w-3 h-3" />
             逾期总额
           </div>
-          <p className="text-2xl font-bold text-red-600">¥{stats.overdueAmount.toFixed(0)}</p>
+          <p className="text-2xl font-bold font-mono">
+            <span className="text-sm text-gray-400 mr-0.5">¥</span>
+            <span className={stats.overdueAmount > 0 ? 'text-gray-900' : 'text-gray-400'}>
+              {stats.overdueAmount.toFixed(0)}
+            </span>
+          </p>
         </div>
       </div>
 
       {/* 客户列表 - 极简样式 */}
       <main className="max-w-2xl mx-auto px-4 pb-6">
         {filteredCollectionData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-            <p className="text-base">暂无逾期客户</p>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-base font-medium text-gray-900 mb-1">太棒了，目前没有逾期账单</p>
+            <p className="text-sm text-gray-400">所有客户都在按时还款，请继续保持</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filteredCollectionData.map((customer) => {
               const isExpanded = expandedCustomers.has(customer.customerId);
               
               return (
                 <div
                   key={customer.customerId}
-                  className="bg-white rounded-lg border border-red-200 bg-red-50/30 overflow-hidden"
+                  className="bg-white rounded-xl shadow-sm overflow-hidden active:scale-[0.98] transition-transform"
                 >
                   <div 
-                    className="flex items-center justify-between p-3 cursor-pointer"
+                    className="flex items-center justify-between p-4 cursor-pointer"
                     onClick={() => {
                       setExpandedCustomers(prev => {
                         const newSet = new Set(prev);
@@ -703,8 +711,8 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right w-20 flex-shrink-0">
-                        <p className="font-bold text-red-600 font-mono text-lg">
-                          ¥{customer.overdueAmount.toFixed(0)}
+                        <p className="font-bold text-rose-600 font-mono text-lg">
+                          <span className="text-xs text-gray-400">¥</span>{customer.overdueAmount.toFixed(0)}
                         </p>
                       </div>
                       {customer.overdueCount > 1 && (
@@ -769,7 +777,9 @@ export default function Dashboard() {
                             )}
                           </div>
                           <div className="text-right flex-shrink-0 w-20">
-                            <p className="font-semibold text-red-600 font-mono text-sm">¥{tx.amount.toFixed(0)}</p>
+                            <p className="font-semibold text-rose-600 font-mono text-sm">
+                              <span className="text-xs text-gray-400">¥</span>{tx.amount.toFixed(0)}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -787,33 +797,43 @@ export default function Dashboard() {
   // 账目模式渲染
   const renderJournalView = () => (
     <>
-      {/* 统计卡片 - 方案一：两行布局 */}
+      {/* 统计卡片 - 简洁样式 */}
       <div className="max-w-2xl mx-auto px-4 py-3 mt-12">
         {/* 第一行：累计数据 */}
         <div className="grid grid-cols-3 gap-2 mb-2">
-          <div className="bg-white rounded-lg p-3 border border-blue-200">
-            <div className="text-gray-500 text-xs mb-1">总待收</div>
-            <p className="text-base font-semibold text-blue-600">¥{stats.totalReceivable.toFixed(0)}</p>
+          <div className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="text-gray-400 text-xs mb-1">总待收</div>
+            <p className="text-base font-bold text-gray-900 font-mono">
+              <span className="text-xs text-gray-400">¥</span>{stats.totalReceivable.toFixed(0)}
+            </p>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-red-200">
-            <div className="text-gray-500 text-xs mb-1">总欠款</div>
-            <p className="text-base font-semibold text-red-600">¥{stats.totalDebt.toFixed(0)}</p>
+          <div className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="text-gray-400 text-xs mb-1">总欠款</div>
+            <p className="text-base font-bold text-gray-900 font-mono">
+              <span className="text-xs text-gray-400">¥</span>{stats.totalDebt.toFixed(0)}
+            </p>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-emerald-200">
-            <div className="text-gray-500 text-xs mb-1">总还款</div>
-            <p className="text-base font-semibold text-emerald-600">¥{stats.totalPayment.toFixed(0)}</p>
+          <div className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="text-gray-400 text-xs mb-1">总还款</div>
+            <p className="text-base font-bold text-gray-900 font-mono">
+              <span className="text-xs text-gray-400">¥</span>{stats.totalPayment.toFixed(0)}
+            </p>
           </div>
         </div>
         
         {/* 第二行：今日数据 */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <div className="text-gray-500 text-xs mb-1">今日欠款</div>
-            <p className="text-base font-semibold text-gray-900">¥{stats.todayDebt.toFixed(0)}</p>
+          <div className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="text-gray-400 text-xs mb-1">今日欠款</div>
+            <p className="text-base font-bold text-gray-900 font-mono">
+              <span className="text-xs text-gray-400">¥</span>{stats.todayDebt.toFixed(0)}
+            </p>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <div className="text-gray-500 text-xs mb-1">今日收款</div>
-            <p className="text-base font-semibold text-gray-900">¥{stats.todayPayment.toFixed(0)}</p>
+          <div className="bg-white rounded-xl p-3 shadow-sm">
+            <div className="text-gray-400 text-xs mb-1">今日收款</div>
+            <p className="text-base font-bold text-gray-900 font-mono">
+              <span className="text-xs text-gray-400">¥</span>{stats.todayPayment.toFixed(0)}
+            </p>
           </div>
         </div>
       </div>
@@ -829,7 +849,7 @@ export default function Dashboard() {
             {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className={`rounded-lg shadow-sm p-4 transition-all hover:shadow-md active:scale-95 cursor-pointer ${getCardStyle(transaction.type)}`}
+                className={`rounded-xl shadow-sm p-4 transition-all active:scale-[0.98] cursor-pointer ${getCardStyle(transaction.type)}`}
                 onMouseDown={() => handleLongPressStart(transaction.id!)}
                 onMouseUp={handleLongPressEnd}
                 onMouseLeave={handleLongPressEnd}
@@ -848,17 +868,17 @@ export default function Dashboard() {
                         {transaction.type === TransactionType.DEBT ? '欠款' : '还款'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       {format(new Date(transaction.occurredAt), 'yyyy-MM-dd', { locale: zhCN })}
                     </p>
                     {transaction.note && (
                       <div 
-                        className="mt-2 flex items-start gap-1.5 cursor-pointer hover:bg-white/30 p-1 rounded transition-colors"
+                        className="mt-2 flex items-start gap-1.5 cursor-pointer"
                         onClick={(e) => toggleNoteExpand(transaction.id!, e)}
                       >
-                        <span className="text-gray-400 text-xs mt-0.5 flex-shrink-0">备注:</span>
+                        <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                         <div className="flex-1 min-w-0 flex items-start gap-1">
-                          <p className={`text-xs text-gray-600 leading-relaxed flex-1 ${
+                          <p className={`text-xs text-gray-500 leading-relaxed flex-1 ${
                             expandedNotes.has(transaction.id!) ? '' : 'line-clamp-1'
                           }`}>
                             {transaction.note}
@@ -877,7 +897,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="flex-shrink-0 text-right w-28">
-                    <p className={`text-xl font-bold whitespace-nowrap ${getAmountColor(transaction.type)}`}>
+                    <p className={`text-xl font-bold whitespace-nowrap font-mono ${getAmountColor(transaction.type)}`}>
                       {formatAmount(transaction.amount, transaction.type)}
                     </p>
                   </div>
@@ -892,7 +912,7 @@ export default function Dashboard() {
 
   return (
     <div 
-      className={`min-h-screen pb-24 ${viewMode === 'collection' ? 'bg-red-50/30' : 'bg-gray-50'}`}
+      className="min-h-screen pb-24 bg-slate-50"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
