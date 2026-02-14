@@ -67,21 +67,41 @@ function App() {
       
       customers.forEach(customer => {
         const customerTransactions = transactions.filter(t => t.customerId === customer.id);
-        const totalDebt = customerTransactions
+        const debtTransactions = customerTransactions
           .filter(t => t.type === TransactionType.DEBT)
-          .reduce((sum, t) => sum + t.amount, 0);
-        const totalPayment = customerTransactions
+          .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+        const paymentTransactions = customerTransactions
           .filter(t => t.type === TransactionType.PAYBACK)
-          .reduce((sum, t) => sum + t.amount, 0);
-        const balance = totalDebt - totalPayment;
+          .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
 
-        if (balance <= 0) return;
+        // 计算每笔欠款的剩余金额
+        const debtRemainingMap: Record<number, number> = {};
+        debtTransactions.forEach(debt => {
+          debtRemainingMap[debt.id!] = debt.amount;
+        });
+
+        // 用还款抵扣欠款
+        paymentTransactions.forEach(payment => {
+          let remainingPayment = payment.amount;
+          for (const debt of debtTransactions) {
+            if (remainingPayment <= 0) break;
+            const debtRemaining = debtRemainingMap[debt.id!];
+            if (debtRemaining > 0) {
+              const deduction = Math.min(debtRemaining, remainingPayment);
+              debtRemainingMap[debt.id!] -= deduction;
+              remainingPayment -= deduction;
+            }
+          }
+        });
 
         const paymentTerm = customer.paymentTerm || 0;
-        const debtTransactions = customerTransactions.filter(t => t.type === TransactionType.DEBT);
 
-        for (const transaction of debtTransactions) {
-          const debtDate = new Date(transaction.occurredAt);
+        // 检查是否有逾期且未还清的欠款
+        for (const debt of debtTransactions) {
+          const debtRemaining = debtRemainingMap[debt.id!];
+          if (debtRemaining <= 0) continue;
+
+          const debtDate = new Date(debt.occurredAt);
           const dueDate = new Date(debtDate);
           dueDate.setDate(dueDate.getDate() + paymentTerm);
           

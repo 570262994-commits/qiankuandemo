@@ -84,27 +84,46 @@ export default function Customers({ onOpenLogin }: { onBack: () => void; onOpenL
       
       if (hasDebt && customer.paymentTerm > 0) {
         const debtTransactions = customerTransactions
-          .filter(t => t.type === TransactionType.DEBT);
-        
-        for (const transaction of debtTransactions) {
-          const debtDate = new Date(transaction.occurredAt);
+          .filter(t => t.type === TransactionType.DEBT)
+          .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+        const paymentTransactions = customerTransactions
+          .filter(t => t.type === TransactionType.PAYBACK)
+          .sort((a, b) => new Date(a.occurredAt).getTime() - new Date(b.occurredAt).getTime());
+
+        // 计算每笔欠款的剩余金额
+        const debtRemainingMap: Record<number, number> = {};
+        debtTransactions.forEach(debt => {
+          debtRemainingMap[debt.id!] = debt.amount;
+        });
+
+        // 用还款抵扣欠款
+        paymentTransactions.forEach(payment => {
+          let remainingPayment = payment.amount;
+          for (const debt of debtTransactions) {
+            if (remainingPayment <= 0) break;
+            const debtRemaining = debtRemainingMap[debt.id!];
+            if (debtRemaining > 0) {
+              const deduction = Math.min(debtRemaining, remainingPayment);
+              debtRemainingMap[debt.id!] -= deduction;
+              remainingPayment -= deduction;
+            }
+          }
+        });
+
+        // 检查是否有逾期且未还清的欠款
+        let minDaysUntilDue = Infinity;
+        for (const debt of debtTransactions) {
+          const debtRemaining = debtRemainingMap[debt.id!];
+          if (debtRemaining <= 0) continue;
+
+          const debtDate = new Date(debt.occurredAt);
           const dueDate = new Date(debtDate);
           dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
           
           const transactionDaysUntilDue = differenceInDays(dueDate, now);
           if (transactionDaysUntilDue < 0) {
             isOverdue = true;
-            break;
           }
-        }
-        
-        let minDaysUntilDue = Infinity;
-        for (const transaction of debtTransactions) {
-          const debtDate = new Date(transaction.occurredAt);
-          const dueDate = new Date(debtDate);
-          dueDate.setDate(dueDate.getDate() + customer.paymentTerm);
-          
-          const transactionDaysUntilDue = differenceInDays(dueDate, now);
           if (transactionDaysUntilDue < minDaysUntilDue) {
             minDaysUntilDue = transactionDaysUntilDue;
           }
