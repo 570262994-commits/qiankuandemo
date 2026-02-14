@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, getAuthRedirectUrl } from '../lib/supabase';
 
 interface AuthState {
   user: User | null;
@@ -81,9 +81,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
+      const redirectUrl = getAuthRedirectUrl();
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
       });
 
       if (error) {
@@ -121,8 +125,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
+      const redirectUrl = getAuthRedirectUrl();
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${redirectUrl}/reset-password`,
       });
 
       return { error };

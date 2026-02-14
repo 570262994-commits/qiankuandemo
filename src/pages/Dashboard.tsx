@@ -10,6 +10,7 @@ import type { Transaction } from '../types';
 import { format, differenceInDays, isToday } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import TransactionDrawer from '../components/TransactionDrawer';
+import InstallPrompt from '../components/InstallPrompt';
 
 type FilterType = 'all' | TransactionType;
 type CustomerFilterType = 'all' | 'overdue' | 'due_soon' | 'long_term';
@@ -1182,6 +1183,8 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
         transaction={editingTransaction}
         onOpenLogin={onOpenLogin}
       />
+
+      <InstallPrompt />
     </div>
   );
 }
