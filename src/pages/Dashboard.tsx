@@ -836,7 +836,7 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
             </p>
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm">
-            <div className="text-gray-400 text-xs mb-1">今日收款</div>
+            <div className="text-gray-400 text-xs mb-1">今日还款</div>
             <p className="text-base font-bold text-gray-900 font-mono">
               <span className="text-xs text-gray-400">¥</span>{stats.todayPayment.toFixed(0)}
             </p>
