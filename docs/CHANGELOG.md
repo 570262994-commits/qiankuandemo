@@ -7,6 +7,26 @@
 
 ---
 
+## [v1.2.0] - 2026-02-14
+
+### 新增功能
+
+- ✨ AI 催款助手
+  - 异常提醒模式下逾期客户卡片添加"AI催款"按钮
+  - 支持 4 种催款风格：礼貌温和、专业正式、委婉提醒、幽默轻松
+  - AI 根据客户逾期天数、金额和备注自动生成催款文案
+  - 一键复制文案到剪贴板
+  - 调用智谱 GLM API 生成文案
+
+### 技术实现
+
+- 新增 `src/lib/aiCollection.ts` - GLM API 调用封装
+- 新增 `src/components/AICollectionDialog.tsx` - AI催款弹窗组件
+- 新增类型定义 `CollectionStyle` 和 `CollectionData`
+- 添加环境变量 `VITE_GLM_API_KEY`
+
+---
+
 ## [v1.1.0] - 2026-02-14
 
 ### 新增功能

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, AlertTriangle, SlidersHorizontal } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, AlertTriangle, SlidersHorizontal, Wand2 } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
@@ -11,6 +11,7 @@ import { format, differenceInDays, isToday } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import TransactionDrawer from '../components/TransactionDrawer';
 import InstallPrompt from '../components/InstallPrompt';
+import AICollectionDialog from '../components/AICollectionDialog';
 
 type FilterType = 'all' | TransactionType;
 type CustomerFilterType = 'all' | 'overdue' | 'due_soon' | 'long_term';
@@ -61,6 +62,13 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
   const [customerFilter, setCustomerFilter] = useState<CustomerFilterType>('all');
   const [overdueDepthFilter, setOverdueDepthFilter] = useState<OverdueDepthType>('all');
   const [billStatusFilter, setBillStatusFilter] = useState<BillStatusType>('all');
+  const [showAICollection, setShowAICollection] = useState(false);
+  const [aiCollectionData, setAiCollectionData] = useState<{
+    customerName: string;
+    amount: number;
+    overdueDays: number;
+    note?: string;
+  } | null>(null);
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
@@ -792,6 +800,25 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                       ))}
                     </div>
                   )}
+                  
+                  <div className="border-t border-gray-100 p-3 flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAiCollectionData({
+                          customerName: customer.customerName,
+                          amount: customer.overdueAmount,
+                          overdueDays: customer.overdueDays,
+                          note: customer.overdueTransactions[0]?.note,
+                        });
+                        setShowAICollection(true);
+                      }}
+                      className="flex-1 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+                    >
+                      <Wand2 className="w-4 h-4" />
+                      AI 催款
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -1185,6 +1212,17 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
       />
 
       <InstallPrompt />
+
+      {aiCollectionData && (
+        <AICollectionDialog
+          isOpen={showAICollection}
+          onClose={() => {
+            setShowAICollection(false);
+            setAiCollectionData(null);
+          }}
+          data={aiCollectionData}
+        />
+      )}
     </div>
   );
 }

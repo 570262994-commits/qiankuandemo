@@ -30,3 +30,13 @@ export interface Transaction {
 export interface CustomerWithBalance extends Customer {
   balance: number;
 }
+
+export type CollectionStyle = 'polite' | 'professional' | 'gentle' | 'humorous';
+
+export interface CollectionData {
+  customerName: string;
+  amount: number;
+  overdueDays: number;
+  note?: string;
+  style: CollectionStyle;
+}
