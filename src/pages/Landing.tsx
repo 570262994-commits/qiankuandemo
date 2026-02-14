@@ -183,8 +183,10 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <p className="text-xl sm:text-2xl bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-bold mb-6">
               催款不尴尬，要账有方法
             </p>
-            <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-              小本生意的记账神器，谁欠你钱、欠多久、欠多少，一目了然
+            <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
+              小本生意的记账神器<br />
+              谁欠你钱、欠多久、欠多少<br />
+              一目了然
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
