@@ -342,26 +342,26 @@ export default function Landing({ onGetStarted }: LandingProps) {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+      <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
               6个功能，够用就好
             </h2>
-            <p className="text-gray-500">不搞花里胡哨，专注解决你的问题</p>
+            <p className="text-gray-500 text-sm">不搞花里胡哨，专注解决你的问题</p>
           </div>
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {features.map((feature, index) => (
               <div 
                 key={index}
-                className="group p-5 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all"
+                className="group p-3 sm:p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
               >
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3`}>
-                  <feature.icon className="w-5 h-5 text-white" />
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-2`}>
+                  <feature.icon className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-base font-bold text-gray-900 mb-1">{feature.title}</h3>
-                <p className="text-gray-500 text-sm">{feature.description}</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">{feature.title}</h3>
+                <p className="text-gray-500 text-xs">{feature.description}</p>
               </div>
             ))}
           </div>
