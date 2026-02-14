@@ -69,7 +69,13 @@ export default function ChangePassword({ isOpen, onClose }: ChangePasswordProps)
       setLoading(false);
 
       if (error) {
-        toast.error(error.message || '修改失败');
+        let errorMessage = '修改失败';
+        if (error.message.includes('different from the old password')) {
+          errorMessage = '新密码不能与当前密码相同';
+        } else if (error.message.includes('Password')) {
+          errorMessage = '密码格式不符合要求';
+        }
+        toast.error(errorMessage);
         return;
       }
 
