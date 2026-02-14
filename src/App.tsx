@@ -22,15 +22,22 @@ function App() {
   const { isOpen, type, title, message, buttons, hide } = useModalStore();
   const { toasts, remove } = useToastStore();
   const { viewMode, setViewMode } = useViewModeStore();
-  const { transactions } = useTransactionStore();
-  const { customers } = useCustomerStore();
-  const { initialize } = useAuthStore();
+  const { transactions, fetchTransactions } = useTransactionStore();
+  const { customers, fetchCustomers } = useCustomerStore();
+  const { user, initialize } = useAuthStore();
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot' | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCustomers();
+      fetchTransactions();
+    }
+  }, [user, fetchCustomers, fetchTransactions]);
 
   // 计算统计数据
   const stats = {

@@ -29,9 +29,11 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
 
   useEffect(() => {
-    fetchCustomers();
-    fetchTransactions();
-  }, [fetchCustomers, fetchTransactions]);
+    if (user) {
+      fetchCustomers();
+      fetchTransactions();
+    }
+  }, [user, fetchCustomers, fetchTransactions]);
 
   const customersWithCalculated: CustomerWithCalculated[] = useMemo(() => {
     const now = new Date();

@@ -103,9 +103,11 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
   };
 
   useEffect(() => {
-    fetchCustomers();
-    fetchTransactions();
-  }, [fetchCustomers, fetchTransactions]);
+    if (user) {
+      fetchCustomers();
+      fetchTransactions();
+    }
+  }, [user, fetchCustomers, fetchTransactions]);
 
   useEffect(() => {
     if ((customerFilter === 'overdue' || customerFilter === 'due_soon') && filterType === TransactionType.PAYBACK) {
