@@ -75,14 +75,14 @@ const shouldShowPrompt = isIOS && !isStandalone;
 
 ### 4.1 customers 表策略
 ```sql
-CREATE POLICY "Users can view own customers" ON customers
-  FOR SELECT USING (auth.uid()::text = device_id);
+CREATE POLICY "Users can only access their own customers" ON customers
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 ```
 
 ### 4.2 transactions 表策略
 ```sql
-CREATE POLICY "Users can view own transactions" ON transactions
-  FOR SELECT USING (auth.uid()::text = device_id);
+CREATE POLICY "Users can only access their own transactions" ON transactions
+  FOR ALL USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 ```
 
 ---

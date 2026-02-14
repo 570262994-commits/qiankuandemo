@@ -70,7 +70,7 @@ export default function Profile({ onOpenLogin }: ProfileProps) {
             <ul className="text-sm text-blue-800 space-y-2">
               <li>• 登录后数据自动同步到云端</li>
               <li>• 更换设备登录同一账号即可查看数据</li>
-              <li>• 数据安全存储在阿里云 Supabase</li>
+              <li>• 数据安全存储在 Supabase 云端</li>
             </ul>
           </div>
         </div>

@@ -11,7 +11,7 @@
 | 项目 | 内容 |
 |-----|------|
 | 测试地址 | http://localhost:5174/ |
-| 数据库 | 阿里云 Supabase (PostgreSQL) |
+| 数据库 | Supabase (PostgreSQL) |
 | 测试日期 | 2026-02-14 |
 | 测试工具 | Playwright |
 
