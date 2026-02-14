@@ -24,6 +24,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   const [note, setNote] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [customerSearch, setCustomerSearch] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { customers, addCustomer, getCustomerByName } = useCustomerStore();
   const { transactions, addTransaction, updateTransaction } = useTransactionStore();
@@ -76,6 +77,8 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   );
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+    
     if (!selectedCustomer) {
       warning('请选择客户');
       return;
@@ -99,6 +102,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
       }
     }
 
+    setIsSubmitting(true);
     try {
       const customer = await getCustomerByName(selectedCustomer.name);
       if (!customer) {
@@ -139,6 +143,8 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     } catch (err) {
       console.error('Failed to save transaction:', err);
       toast.error(isEditMode ? '更新记录失败，请重试' : '记录失败，请重试');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -322,10 +328,10 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
 
             <button
               onClick={handleSubmit}
-              disabled={!selectedCustomer || !amount || parseFloat(amount) <= 0}
+              disabled={!selectedCustomer || !amount || parseFloat(amount) <= 0 || isSubmitting}
               className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 active:scale-98 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {isEditMode ? '确认修改' : '确认提交'}
+              {isSubmitting ? '提交中...' : (isEditMode ? '确认修改' : '确认提交')}
             </button>
           </div>
         </div>
