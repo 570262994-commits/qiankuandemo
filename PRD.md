@@ -135,6 +135,53 @@
 - **编辑交易**：点击交易卡片打开编辑抽屉
 - **删除交易**：长按交易卡片触发删除确认（需真机支持）
 
+### 2.4 认证模块
+
+#### 2.4.1 用户注册
+- 邮箱注册账号
+- 填写邮箱、密码、确认密码
+- 注册成功后发送验证邮件
+
+#### 2.4.2 用户登录
+- 邮箱+密码登录
+- 登录成功后自动同步云端数据
+
+#### 2.4.3 退出登录
+- 安全退出当前账号
+- 清除本地会话状态
+
+#### 2.4.4 修改密码
+- 输入当前密码验证身份
+- 输入新密码（至少6位）
+- 确认新密码
+- 密码修改成功后需重新登录
+
+#### 2.4.5 修改邮箱
+- 显示当前邮箱
+- 输入新邮箱
+- 输入当前密码确认身份
+- 发送验证邮件到新邮箱
+
+#### 2.4.6 忘记密码
+- 输入注册邮箱
+- 发送密码重置邮件
+- 点击邮件链接重置密码
+
+### 2.5 个人中心
+
+#### 2.5.1 用户信息展示
+- 显示当前登录用户邮箱
+- 显示登录状态
+
+#### 2.5.2 账户安全
+- 修改邮箱入口
+- 修改密码入口
+
+#### 2.5.3 数据说明
+- 登录后数据自动同步到云端
+- 更换设备登录同一账号即可查看数据
+- 数据安全存储在阿里云 Supabase
+
 ---
 
 ## 3. 信用额度系统
@@ -184,13 +231,23 @@
 ## 5. 技术架构
 
 ### 5.1 技术栈
-- **前端框架**：React 18 + TypeScript
-- **构建工具**：Vite
-- **样式方案**：Tailwind CSS v4
-- **状态管理**：Zustand
-- **后端服务**：Supabase（PostgreSQL + Auth + Realtime）
-- **UI组件**：Lucide Icons
-- **日期处理**：date-fns
+
+#### 前端技术
+| 技术 | 版本 | 用途 |
+|-----|------|------|
+| React | 18.x | UI 框架 |
+| TypeScript | 5.x | 类型安全 |
+| Vite | 8.x | 构建工具 |
+| TailwindCSS | 4.x | 样式框架 |
+| Zustand | 4.x | 状态管理 |
+| Lucide React | 图标库 | 图标组件 |
+| date-fns | 日期处理 | 日期格式化 |
+
+#### 后端技术
+| 技术 | 版本 | 用途 |
+|-----|------|------|
+| Supabase | 云服务 | 身份认证、数据库、RLS |
+| PostgreSQL | 15+ | 关系型数据库 |
 
 ### 5.2 数据模型
 
@@ -198,61 +255,105 @@
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | number | 主键 |
+| user_id | uuid | 用户ID（关联auth.users）|
 | name | string | 客户名称 |
 | phone | string | 电话号码 |
 | credit_limit | number | 信用额度（-1表示无限） |
 | payment_term | number | 固定账期（天） |
-| device_id | string | 设备ID |
 | created_at | timestamp | 创建时间 |
 
 #### Transaction（交易）
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | number | 主键 |
+| user_id | uuid | 用户ID（关联auth.users）|
 | customer_id | number | 客户ID |
 | type | enum | 交易类型（debt/payback） |
 | amount | number | 金额 |
 | note | string | 备注 |
 | occurred_at | timestamp | 交易时间 |
-| device_id | string | 设备ID |
+| due_date | timestamp | 到期日期 |
 | created_at | timestamp | 创建时间 |
 
-### 5.3 设备隔离
-- 使用 device_id 实现多设备数据隔离
-- 每个设备只能看到自己的数据
+### 5.3 用户隔离
+- 使用 user_id 实现多用户数据隔离
+- 每个用户只能看到自己的数据
+- 通过 Supabase RLS（行级安全策略）实现
+
+### 5.4 项目结构
+
+```
+qiankuandemo/
+├── docs/                    # 文档目录
+│   ├── CHANGELOG.md        # 更新日志
+│   ├── ARCHITECTURE.md     # 技术架构文档
+│   └── TEST_REPORT.md      # 测试报告
+├── src/
+│   ├── components/         # React 组件
+│   │   ├── AddCustomerDialog.tsx    # 新增/编辑客户弹窗
+│   │   ├── ChangeEmail.tsx          # 修改邮箱弹窗
+│   │   ├── ChangePassword.tsx       # 修改密码弹窗
+│   │   ├── CustomModal.tsx          # 自定义确认弹窗
+│   │   ├── Toast.tsx                # 轻提示组件
+│   │   └── TransactionDrawer.tsx    # 记一笔弹窗
+│   ├── lib/                # 工具函数
+│   │   ├── supabase.ts              # Supabase 客户端
+│   │   ├── supabaseApi.ts           # API 接口封装
+│   │   ├── deviceId.ts              # 设备ID生成
+│   │   └── utils.ts                 # 通用工具函数
+│   ├── pages/               # 页面组件
+│   │   ├── Dashboard.tsx            # 首页（数据统计、交易列表）
+│   │   ├── Customers.tsx            # 客户列表页
+│   │   ├── Profile.tsx             # 个人中心页
+│   │   ├── Login.tsx               # 登录组件
+│   │   ├── Register.tsx            # 注册组件
+│   │   └── ForgotPassword.tsx      # 忘记密码组件
+│   ├── store/               # Zustand 状态管理
+│   │   ├── authStore.ts            # 认证状态
+│   │   ├── customerStore.ts        # 客户数据
+│   │   ├── transactionStore.ts     # 交易数据
+│   │   ├── modalStore.ts           # 弹窗状态
+│   │   ├── toastStore.ts           # 轻提示状态
+│   │   └── viewModeStore.ts       # 视图模式状态
+│   ├── types/               # TypeScript 类型定义
+│   │   └── index.ts
+│   ├── App.tsx              # 根组件
+│   ├── main.tsx             # 入口文件
+│   └── index.css            # 全局样式
+├── index.html
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── vite.config.ts
+├── PRD.md
+└── README.md
+```
 
 ---
 
 ## 6. 版本历史
 
-### v0.4.0（当前版本）
-- **双视图模式**：首页支持"异常提醒"和"收支明细"两种视图
-- **逾期催收功能**：
-  - 逾期总额看板
-  - 逾期客户列表
-  - 多笔逾期展开明细
-- **账单状态筛选**：支持按已逾期/3天内到期筛选
-- **筛选互斥逻辑**：还款时自动禁用账单状态筛选
-- **客户状态优化**：无欠款客户不显示到期提醒
-- **UI优化**：Tab切换、卡片样式、空状态设计
+### v1.0.0（当前版本）
 
-### v0.3.x
-- 优化客户卡片UI布局
-- 重构信用额度展示方式
-- 添加剩余额度进度条
-- 实现信用额度校验机制
-- 修复NaN计算错误
+#### 新增功能
+- 用户认证模块（注册、登录、退出）
+- 修改密码功能
+- 修改邮箱功能
+- 忘记密码功能
+- 个人中心页面
+- 登录检查机制
 
-### v0.2.x
-- 添加首页搜索和筛选功能
-- UI优化和Toast提示
-- 统一弹窗交互体验
-- 添加备注展开/收起功能
+#### 代码优化
+- 删除 Dexie 本地数据库
+- 删除冗余文件
+- 简化代码逻辑
+- 清理未使用方法
 
-### v0.1.x
-- 基础客户管理功能
-- 基础交易记录功能
-- 数据持久化
+#### Bug修复
+- 修复数据库 RLS 策略配置
+
+#### 测试结果
+- 所有核心功能测试通过 (14/14)
 
 ---
 
@@ -290,4 +391,4 @@
 ### 8.3 兼容性要求
 - 支持 iOS Safari
 - 支持 Android Chrome
-- 响应式布局适配不同屏幕尺寸
+- 支持桌面浏览器（Chrome、Firefox、Safari、Edge）

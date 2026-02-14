@@ -28,7 +28,7 @@
 ```
 qiankuandemo/
 ├── docs/                    # 文档目录
-│   ├── SPEC.md             # 需求规格说明书
+│   ├── PRD.md              # 需求规格说明书
 │   ├── ARCHITECTURE.md     # 技术架构文档
 │   └── TEST_REPORT.md      # 测试报告
 ├── src/
