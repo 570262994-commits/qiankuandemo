@@ -13,6 +13,7 @@ interface TransactionDrawerProps {
   onClose: () => void;
   onSubmit: () => void;
   transaction?: Transaction;
+  onOpenLogin?: () => void;
 }
 
 export default function TransactionDrawer({ isOpen, onClose, onSubmit, transaction }: TransactionDrawerProps) {

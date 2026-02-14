@@ -1,8 +1,11 @@
-import { useState } from 'react';
-import { Users, Settings, AlertTriangle, Receipt } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Users, User, AlertTriangle, Receipt } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
-import SettingsPage from './pages/Settings';
+import Profile from './pages/Profile';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import { CustomModal } from './components/CustomModal';
 import { ToastContainer } from './components/Toast';
 import { useModalStore } from './store/modalStore';
@@ -10,16 +13,24 @@ import { useToastStore } from './store/toastStore';
 import { useViewModeStore } from './store/viewModeStore';
 import { useTransactionStore } from './store/transactionStore';
 import { useCustomerStore } from './store/customerStore';
+import { useAuthStore } from './store/authStore';
 import { TransactionType } from './types';
 import { differenceInDays, isToday } from 'date-fns';
 
 function App() {
-  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'customers' | 'profile'>('dashboard');
   const { isOpen, type, title, message, buttons, hide } = useModalStore();
   const { toasts, remove } = useToastStore();
   const { viewMode, setViewMode } = useViewModeStore();
   const { transactions } = useTransactionStore();
   const { customers } = useCustomerStore();
+  const { initialize } = useAuthStore();
+  const [authView, setAuthView] = useState<'login' | 'register' | 'forgot' | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   // 计算统计数据
   const stats = {
@@ -61,9 +72,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {currentView === 'dashboard' && <Dashboard />}
-      {currentView === 'customers' && <Customers onBack={() => setCurrentView('dashboard')} />}
-      {currentView === 'settings' && <SettingsPage />}
+      {currentView === 'dashboard' && <Dashboard onOpenLogin={() => { setAuthView('login'); setShowAuthModal(true); }} />}
+      {currentView === 'customers' && <Customers onBack={() => setCurrentView('dashboard')} onOpenLogin={() => { setAuthView('login'); setShowAuthModal(true); }} />}
+      {currentView === 'profile' && <Profile onOpenLogin={() => { setAuthView('login'); setShowAuthModal(true); }} />}
 
       {/* 顶部双看板切换 Tab - 仅在首页显示 */}
       {currentView === 'dashboard' && (
@@ -136,13 +147,13 @@ function App() {
             <span className="text-xs font-medium">客户</span>
           </button>
           <button
-            onClick={() => setCurrentView('settings')}
+            onClick={() => setCurrentView('profile')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition-colors ${
-              currentView === 'settings' ? 'text-blue-600' : 'text-gray-500'
+              currentView === 'profile' ? 'text-blue-600' : 'text-gray-500'
             }`}
           >
-            <Settings className="w-6 h-6" />
-            <span className="text-xs font-medium">设置</span>
+            <User className="w-6 h-6" />
+            <span className="text-xs font-medium">我的</span>
           </button>
         </div>
       </nav>
@@ -157,6 +168,24 @@ function App() {
       />
 
       <ToastContainer toasts={toasts} removeToast={remove} />
+
+      {/* 登录/注册/忘记密码弹窗 */}
+      <Login
+        isOpen={showAuthModal && authView === 'login'}
+        onClose={() => { setShowAuthModal(false); setAuthView(null); }}
+        onSwitchToRegister={() => setAuthView('register')}
+        onSwitchToForgotPassword={() => setAuthView('forgot')}
+      />
+      <Register
+        isOpen={showAuthModal && authView === 'register'}
+        onClose={() => { setShowAuthModal(false); setAuthView(null); }}
+        onSwitchToLogin={() => setAuthView('login')}
+      />
+      <ForgotPassword
+        isOpen={showAuthModal && authView === 'forgot'}
+        onClose={() => { setShowAuthModal(false); setAuthView(null); }}
+        onSwitchToLogin={() => setAuthView('login')}
+      />
     </div>
   );
 }

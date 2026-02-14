@@ -11,6 +11,7 @@ interface AddCustomerDialogProps {
   onClose: () => void;
   onSubmit: () => void;
   customer?: Customer;
+  onOpenLogin?: () => void;
 }
 
 export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer }: AddCustomerDialogProps) {

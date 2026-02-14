@@ -9,7 +9,6 @@ interface CustomerStore {
   addCustomer: (customer: Customer) => Promise<number>;
   updateCustomer: (id: number, customer: Partial<Customer>) => Promise<void>;
   getCustomerByName: (name: string) => Promise<Customer | undefined>;
-  searchCustomers: (query: string) => Promise<Customer[]>;
 }
 
 export const useCustomerStore = create<CustomerStore>((set, get) => ({
@@ -54,15 +53,6 @@ export const useCustomerStore = create<CustomerStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to get customer by name:', error);
       return undefined;
-    }
-  },
-
-  searchCustomers: async (query: string) => {
-    try {
-      return await supabaseApi.searchCustomers(query);
-    } catch (error) {
-      console.error('Failed to search customers:', error);
-      return [];
     }
   },
 }));

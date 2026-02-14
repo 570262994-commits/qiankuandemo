@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, AlertTriangle, Bell, SlidersHorizontal, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
 import { useModalStore } from '../store/modalStore';
 import { useViewModeStore } from '../store/viewModeStore';
+import { useAuthStore } from '../store/authStore';
 import { TransactionType } from '../types';
 import type { Transaction } from '../types';
 import { format, differenceInDays, isToday } from 'date-fns';
@@ -36,11 +37,16 @@ interface CustomerCollectionData {
   paymentTerm: number;
 }
 
-export default function Dashboard() {
+interface DashboardProps {
+  onOpenLogin?: () => void;
+}
+
+export default function Dashboard({ onOpenLogin }: DashboardProps) {
   const { transactions, fetchTransactions, deleteTransaction } = useTransactionStore();
   const { customers, fetchCustomers } = useCustomerStore();
   const { confirm } = useModalStore();
-  const { viewMode } = useViewModeStore();
+  const { viewMode, setViewMode } = useViewModeStore();
+  const { user } = useAuthStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -54,7 +60,7 @@ export default function Dashboard() {
   const [customerFilter, setCustomerFilter] = useState<CustomerFilterType>('all');
   const [overdueDepthFilter, setOverdueDepthFilter] = useState<OverdueDepthType>('all');
   const [billStatusFilter, setBillStatusFilter] = useState<BillStatusType>('all');
-  const [showOverdueAlert, setShowOverdueAlert] = useState(true);
+
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   // 手势切换视图模式
@@ -632,7 +638,7 @@ export default function Dashboard() {
     return type === TransactionType.DEBT ? 'text-rose-600' : 'text-emerald-600';
   };
 
-  const getCardStyle = (type: TransactionType) => {
+  const getCardStyle = () => {
     return 'bg-white shadow-sm';
   };
 
@@ -849,7 +855,7 @@ export default function Dashboard() {
             {filteredTransactions.map((transaction) => (
               <div
                 key={transaction.id}
-                className={`rounded-xl shadow-sm p-4 transition-all active:scale-[0.98] cursor-pointer ${getCardStyle(transaction.type)}`}
+                className={`rounded-xl shadow-sm p-4 transition-all active:scale-[0.98] cursor-pointer ${getCardStyle()}`}
                 onMouseDown={() => handleLongPressStart(transaction.id!)}
                 onMouseUp={handleLongPressEnd}
                 onMouseLeave={handleLongPressEnd}
@@ -1150,6 +1156,10 @@ export default function Dashboard() {
 
       <button
         onClick={() => {
+          if (!user) {
+            onOpenLogin?.();
+            return;
+          }
           setEditingTransaction(undefined);
           setIsDrawerOpen(true);
         }}
@@ -1170,6 +1180,7 @@ export default function Dashboard() {
           fetchTransactions();
         }}
         transaction={editingTransaction}
+        onOpenLogin={onOpenLogin}
       />
     </div>
   );

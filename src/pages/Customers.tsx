@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Plus, Phone, Bell, AlertTriangle } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
+import { useAuthStore } from '../store/authStore';
 import { TransactionType, CREDIT_LIMIT_UNLIMITED } from '../types';
 import type { Customer } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
@@ -17,9 +18,10 @@ interface CustomerWithCalculated extends Customer {
   hasDebt: boolean;
 }
 
-export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
+export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: () => void; onOpenLogin?: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
   const { transactions, fetchTransactions } = useTransactionStore();
+  const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
@@ -260,6 +262,10 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
 
       <button
         onClick={() => {
+          if (!user) {
+            onOpenLogin?.();
+            return;
+          }
           setEditingCustomer(undefined);
           setIsAddDialogOpen(true);
         }}
@@ -276,6 +282,7 @@ export default function Customers({ onBack: _onBack }: { onBack: () => void }) {
           fetchCustomers();
         }}
         customer={editingCustomer}
+        onOpenLogin={onOpenLogin}
       />
     </div>
   );

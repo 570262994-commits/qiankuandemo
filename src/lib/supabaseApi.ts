@@ -1,17 +1,23 @@
 import { supabase } from './supabase';
-import { getDeviceId } from './deviceId';
+import { useAuthStore } from '../store/authStore';
 import type { Customer, Transaction } from '../types';
 import { TransactionType } from '../types';
+
+const getUserId = (): string => {
+  const userId = useAuthStore.getState().user?.id;
+  if (!userId) throw new Error('用户未登录');
+  return userId;
+};
 
 export const supabaseApi = {
   async getCustomers(): Promise<Customer[]> {
     if (!supabase) return [];
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('device_id', deviceId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -21,12 +27,12 @@ export const supabaseApi = {
   async addCustomer(customer: Customer): Promise<number> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { data, error } = await supabase
       .from('customers')
       .insert([{
         ...this.mapCustomerToSupabase(customer),
-        device_id: deviceId,
+        user_id: userId,
       }])
       .select()
       .single();
@@ -38,12 +44,12 @@ export const supabaseApi = {
   async updateCustomer(id: number, customer: Partial<Customer>): Promise<void> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { error } = await supabase
       .from('customers')
       .update(this.mapCustomerToSupabase(customer))
       .eq('id', id)
-      .eq('device_id', deviceId);
+      .eq('user_id', userId);
 
     if (error) throw error;
   },
@@ -51,11 +57,11 @@ export const supabaseApi = {
   async getCustomerByName(name: string): Promise<Customer | undefined> {
     if (!supabase) return undefined;
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { data, error } = await supabase
       .from('customers')
       .select('*')
-      .eq('device_id', deviceId)
+      .eq('user_id', userId)
       .ilike('name', name)
       .single();
 
@@ -66,34 +72,14 @@ export const supabaseApi = {
     return data ? this.mapCustomerFromSupabase(data) : undefined;
   },
 
-  async searchCustomers(query: string): Promise<Customer[]> {
-    if (!supabase) return [];
-    
-    const deviceId = getDeviceId();
-    let queryBuilder = supabase
-      .from('customers')
-      .select('*')
-      .eq('device_id', deviceId)
-      .order('created_at', { ascending: false });
-
-    if (query.trim()) {
-      queryBuilder = queryBuilder.ilike('name', `%${query}%`);
-    }
-
-    const { data, error } = await queryBuilder;
-
-    if (error) throw error;
-    return data?.map(this.mapCustomerFromSupabase) || [];
-  },
-
   async getTransactions(): Promise<Transaction[]> {
     if (!supabase) return [];
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
-      .eq('device_id', deviceId)
+      .eq('user_id', userId)
       .order('occurred_at', { ascending: false });
 
     if (error) throw error;
@@ -103,12 +89,12 @@ export const supabaseApi = {
   async addTransaction(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<number> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { data, error } = await supabase
       .from('transactions')
       .insert([{
         ...this.mapTransactionToSupabase(transaction),
-        device_id: deviceId,
+        user_id: userId,
       }])
       .select()
       .single();
@@ -120,12 +106,12 @@ export const supabaseApi = {
   async updateTransaction(id: number, transaction: Partial<Transaction>): Promise<void> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { error } = await supabase
       .from('transactions')
       .update(this.mapTransactionToSupabase(transaction))
       .eq('id', id)
-      .eq('device_id', deviceId);
+      .eq('user_id', userId);
 
     if (error) throw error;
   },
@@ -133,44 +119,14 @@ export const supabaseApi = {
   async deleteTransaction(id: number): Promise<void> {
     if (!supabase) throw new Error('Supabase not configured');
     
-    const deviceId = getDeviceId();
+    const userId = getUserId();
     const { error } = await supabase
       .from('transactions')
       .delete()
       .eq('id', id)
-      .eq('device_id', deviceId);
+      .eq('user_id', userId);
 
     if (error) throw error;
-  },
-
-  async getRecentTransactions(limit = 50): Promise<Transaction[]> {
-    if (!supabase) return [];
-    
-    const deviceId = getDeviceId();
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('device_id', deviceId)
-      .order('occurred_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return data?.map(this.mapTransactionFromSupabase) || [];
-  },
-
-  async getTransactionsByCustomerId(customerId: number): Promise<Transaction[]> {
-    if (!supabase) return [];
-    
-    const deviceId = getDeviceId();
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('device_id', deviceId)
-      .eq('customer_id', customerId)
-      .order('occurred_at', { ascending: false });
-
-    if (error) throw error;
-    return data?.map(this.mapTransactionFromSupabase) || [];
   },
 
   mapCustomerToSupabase(customer: Partial<Customer>) {

@@ -9,8 +9,6 @@ interface TransactionStore {
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt'>) => Promise<number>;
   updateTransaction: (id: number, transaction: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: number) => Promise<void>;
-  getRecentTransactions: (limit?: number) => Promise<Transaction[]>;
-  getTransactionsByCustomerId: (customerId: number) => Promise<Transaction[]>;
 }
 
 export const useTransactionStore = create<TransactionStore>((set, get) => ({
@@ -56,24 +54,6 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to delete transaction:', error);
       throw error;
-    }
-  },
-
-  getRecentTransactions: async (limit = 50) => {
-    try {
-      return await supabaseApi.getRecentTransactions(limit);
-    } catch (error) {
-      console.error('Failed to get recent transactions:', error);
-      return [];
-    }
-  },
-
-  getTransactionsByCustomerId: async (customerId: number) => {
-    try {
-      return await supabaseApi.getTransactionsByCustomerId(customerId);
-    } catch (error) {
-      console.error('Failed to get transactions by customer:', error);
-      return [];
     }
   },
 }));
