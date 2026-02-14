@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { 
   Bot, 
   Shield, 
+  Bell, 
+  Smartphone, 
+  Cloud, 
+  Edit3, 
   Copy,
-  Check,
   ArrowRight,
   Menu,
   X,
@@ -14,9 +17,9 @@ interface LandingProps {
 }
 
 export default function Landing({ onGetStarted }: LandingProps) {
-  const [copiedText, setCopiedText] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<'gentle' | 'formal'>('gentle');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,35 +29,51 @@ export default function Landing({ onGetStarted }: LandingProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(text);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  const coreFeatures = [
+  const features = [
     {
       icon: Bot,
-      title: 'AI 催款',
-      description: '一键生成催款话术，复制粘贴就能用，不伤感情还能要回钱',
+      title: 'AI帮催款',
+      description: '一键生成催款话术，复制粘贴就能用',
       color: 'from-purple-500 to-pink-500',
-      highlights: ['温和版', '正式版', '幽默版'],
     },
     {
       icon: Shield,
-      title: '信用预警',
-      description: '谁快超额度了，一眼就知道，防止坏账于未然',
+      title: '额度预警',
+      description: '谁快超额度了，一眼就知道',
       color: 'from-emerald-500 to-teal-500',
-      highlights: ['额度监控', '逾期提醒', '账期管理'],
+    },
+    {
+      icon: Bell,
+      title: '逾期提醒',
+      description: '谁欠多久了，自动提醒你',
+      color: 'from-amber-500 to-orange-500',
+    },
+    {
+      icon: Smartphone,
+      title: '手机桌面',
+      description: '添加到桌面，像App一样用',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      icon: Cloud,
+      title: '换机不丢',
+      description: '数据云端存，换手机也不丢',
+      color: 'from-indigo-500 to-purple-500',
+    },
+    {
+      icon: Edit3,
+      title: '秒记账',
+      description: '3秒记一笔，简单好用',
+      color: 'from-rose-500 to-pink-500',
     },
   ];
 
   const painPoints = [
-    { emoji: '💸', text: '"回头给"是多少生意的终点？', highlight: true },
-    { emoji: '😰', text: '"不好意思问"让多少利润变坏账？', highlight: true },
-    { emoji: '🤔', text: '谁欠我钱？欠多少？想不起来', highlight: false },
-    { emoji: '😬', text: '熟人欠款，开口要钱太尴尬', highlight: false },
-    { emoji: '📱', text: '换个手机，账本全没了', highlight: false },
+    { emoji: '💸', illustration: '😔💰', text: '"回头给"是多少生意的终点？', highlight: true },
+    { emoji: '😰', illustration: '🤦‍♀️💸', text: '"不好意思问"让多少利润变坏账？', highlight: true },
+    { emoji: '🤔', illustration: '🧐📝', text: '谁欠我钱？欠多少？想不起来', highlight: false },
+    { emoji: '😬', illustration: '😅💬', text: '熟人欠款，开口要钱太尴尬', highlight: false },
+    { emoji: '📱', illustration: '😱📱', text: '换个手机，账本全没了', highlight: false },
   ];
 
   const testimonials = [
@@ -77,24 +96,6 @@ export default function Landing({ onGetStarted }: LandingProps) {
       content: '客户多了记不住，现在逾期自动提醒，坏账少多了！',
     },
   ];
-
-  const aiExample = {
-    customer: '张老板',
-    days: 14,
-    amount: 2000,
-    styles: [
-      {
-        name: '温和版',
-        emoji: '🌸',
-        text: '张老板，之前拿的年货2000块，方便时转一下哈~',
-      },
-      {
-        name: '正式版',
-        emoji: '💼',
-        text: '张总您好，您1月1日的采购款2000元已逾期14天，麻烦安排一下付款，谢谢！',
-      },
-    ],
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -151,7 +152,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
       <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent whitespace-nowrap">
               别让欠款拖垮你的生意
             </h1>
             <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
@@ -190,36 +191,71 @@ export default function Landing({ onGetStarted }: LandingProps) {
               </div>
               <p className="text-xs text-gray-400 mb-3">选择催款风格</p>
               <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 bg-purple-100 border-2 border-purple-400 rounded-xl text-center">
+                <button 
+                  onClick={() => setSelectedStyle('gentle')}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    selectedStyle === 'gentle' 
+                      ? 'bg-purple-100 border-2 border-purple-400' 
+                      : 'bg-gray-50 border border-gray-200 hover:border-purple-200'
+                  }`}
+                >
                   <span className="text-lg">🌸</span>
-                  <p className="text-xs font-medium text-purple-700 mt-1">温和版</p>
-                </div>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                  <p className={`text-xs font-medium mt-1 ${selectedStyle === 'gentle' ? 'text-purple-700' : 'text-gray-500'}`}>温和版</p>
+                </button>
+                <button 
+                  onClick={() => setSelectedStyle('formal')}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    selectedStyle === 'formal' 
+                      ? 'bg-purple-100 border-2 border-purple-400' 
+                      : 'bg-gray-50 border border-gray-200 hover:border-purple-200'
+                  }`}
+                >
                   <span className="text-lg">💼</span>
-                  <p className="text-xs font-medium text-gray-500 mt-1">正式版</p>
-                </div>
+                  <p className={`text-xs font-medium mt-1 ${selectedStyle === 'formal' ? 'text-purple-700' : 'text-gray-500'}`}>正式版</p>
+                </button>
               </div>
             </div>
 
             {/* 右侧：微信对话模拟 */}
             <div className="bg-[#EDEDED] rounded-2xl shadow-xl p-4">
               <div className="bg-[#EDEDED] space-y-3">
-                {/* 微信消息气泡 */}
-                <div className="flex justify-end">
-                  <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
-                    <p className="text-sm text-gray-800">张老板，之前拿的年货3000块，方便时转一下哈~</p>
-                  </div>
-                </div>
-                <div className="flex justify-start">
-                  <div className="bg-white rounded-lg px-3 py-2 max-w-[80%]">
-                    <p className="text-sm text-gray-800">好的，这就转给你！</p>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
-                    <p className="text-sm text-gray-800">🙏 谢谢张老板！</p>
-                  </div>
-                </div>
+                {selectedStyle === 'gentle' ? (
+                  <>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">张老板，之前拿的年货3000块，方便时转一下哈~</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">好的，这就转给你！</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">🙏 谢谢张老板！</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">张总您好，您1月1日的采购款3000元已逾期14天，麻烦安排一下付款，谢谢！</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">收到，今天安排财务转账</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">好的，感谢张总支持！</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="mt-4 pt-3 border-t border-gray-300">
                 <div className="flex items-center gap-2">
@@ -366,7 +402,9 @@ export default function Landing({ onGetStarted }: LandingProps) {
                     : 'bg-white shadow-sm'
                 }`}
               >
-                <span className="text-xl">{point.emoji}</span>
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+                  {point.illustration}
+                </div>
                 <span className={`text-gray-700 ${point.highlight ? 'font-medium' : ''}`}>{point.text}</span>
               </div>
             ))}
@@ -378,86 +416,29 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </div>
       </section>
 
-      {/* Core Features Section */}
+      {/* Features Section */}
       <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              两大核心功能
+              6个功能，够用就好
             </h2>
-            <p className="text-gray-500 text-sm">简单好用，专注解决你的问题</p>
+            <p className="text-gray-500 text-sm">不搞花里胡哨，专注解决你的问题</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            {coreFeatures.map((feature, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {features.map((feature, index) => (
               <div 
                 key={index}
-                className="group p-5 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all"
+                className="group p-3 sm:p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
               >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
-                  <feature.icon className="w-6 h-6 text-white" />
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-2`}>
+                  <feature.icon className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-500 text-sm mb-4">{feature.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {feature.highlights.map((h, i) => (
-                    <span key={i} className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-full">{h}</span>
-                  ))}
-                </div>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">{feature.title}</h3>
+                <p className="text-gray-500 text-xs">{feature.description}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI Showcase Section */}
-      <section id="ai" className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 to-pink-50">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-              AI帮你催款
-            </h2>
-            <p className="text-gray-500">一键生成话术，复制粘贴就能用</p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
-            <div className="flex items-center gap-3 mb-5 pb-5 border-b">
-              <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center text-xl">
-                👤
-              </div>
-              <div>
-                <p className="font-bold text-gray-900">{aiExample.customer}</p>
-                <p className="text-sm text-rose-500">逾期{aiExample.days}天 · ¥{aiExample.amount}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {aiExample.styles.map((style, index) => (
-                <div key={index} className="relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span>{style.emoji}</span>
-                    <span className="font-medium text-gray-700 text-sm">{style.name}</span>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-3 pr-10">
-                    <p className="text-gray-600 text-sm">{style.text}</p>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(style.text)}
-                    className="absolute top-9 right-2 p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    {copiedText === style.text ? (
-                      <Check className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="w-4 h-4 text-gray-400" />
-                    )}
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-center text-sm text-gray-400 mt-5 pt-5 border-t">
-              复制 → 发微信 → 坐等收款
-            </p>
           </div>
         </div>
       </section>
@@ -508,15 +489,15 @@ export default function Landing({ onGetStarted }: LandingProps) {
           </p>
           <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">
             <div className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-emerald-500" />
+              <span className="text-emerald-500">✓</span>
               自动同步
             </div>
             <div className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-emerald-500" />
+              <span className="text-emerald-500">✓</span>
               数据隔离
             </div>
             <div className="flex items-center gap-1">
-              <Check className="w-3 h-3 text-emerald-500" />
+              <span className="text-emerald-500">✓</span>
               加密传输
             </div>
           </div>
