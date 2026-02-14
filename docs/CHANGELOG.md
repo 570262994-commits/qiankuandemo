@@ -7,6 +7,72 @@
 
 ---
 
+## [v1.2.2] - 2026-02-14
+
+### 新增功能
+
+- ✨ 客户档案页面视觉重塑
+  - 新增客户头像（姓氏首字母 + 彩色渐变背景）
+  - 卡片圆角从 `rounded-lg` 升级为 `rounded-2xl`
+  - 金额层级重构：主金额突出显示，辅助信息小字
+  - 底部信息左右布局（账期 + 逾期标签）
+  - 逾期状态使用半透明背景 Pill Badge
+
+- ✨ 我的页面优化
+  - 头像缩小至 `w-10 h-10`，使用卡通默认头像 👤
+  - 登录状态头像使用渐变背景 `from-blue-400 to-purple-500`
+  - 数据存储文案字体缩小，间距紧凑
+
+- ✨ 网络请求重试机制
+  - 添加 `withRetry` 函数，自动重试网络错误
+  - `getCustomers` 和 `getTransactions` 支持最多 2 次重试
+  - 网络错误包括: connection, network, timeout, fetch, closed
+
+### Bug修复
+
+- 🐛 修复邮箱显示截断问题
+  - 移除 `truncate` 截断，改为 `break-all` 换行显示
+  - 添加 `flex-shrink-0` 防止头像和按钮被压缩
+
+- 🐛 修复刷新页面后数据不加载的问题
+  - 添加 `initialized` 状态检查
+  - App.tsx、Dashboard.tsx、Customers.tsx 等待 auth 初始化完成后再获取数据
+
+- 🐛 修复修改密码错误提示为中文友好提示
+  - "New password should be different from the old password." → "新密码不能与当前密码相同"
+
+### UI优化
+
+- 💄 客户卡片点击缩放效果从 `scale-95` 改为 `scale-[0.98]`
+- 💄 进度条样式优化：上下留白 + 柔和背景
+
+### 技术优化
+
+- 🔧 清理冗余代码和未使用的导入
+  - 移除 `User`, `AlertCircle`, `createModalButtons` 等未使用导入
+  - 移除未使用的函数 `createModalButtons`
+- 🔧 修复 TypeScript `any` 类型问题
+  - `InstallPrompt.tsx` 中 `navigator.standalone` 使用正确的类型定义
+- 🔧 添加 `useCallback` 优化 `getCustomerName` 函数
+- 🔧 修复 ESLint 警告
+  - 修复 case 块中的词法声明问题
+  - 修复 catch 块中未使用的变量
+
+### 文件变更
+
+- 修改文件：
+  - `src/pages/Customers.tsx` - 客户档案页面视觉重塑
+  - `src/pages/Profile.tsx` - 我的页面优化
+  - `src/pages/Dashboard.tsx` - 添加 initialized 检查、useCallback 优化
+  - `src/pages/App.tsx` - 添加 initialized 检查
+  - `src/components/ChangePassword.tsx` - 中文错误提示
+  - `src/components/ChangeEmail.tsx` - 修复 catch 块
+  - `src/components/InstallPrompt.tsx` - 修复 TypeScript any 类型
+  - `src/components/CustomModal.tsx` - 移除未使用函数
+  - `src/lib/supabaseApi.ts` - 添加网络请求重试机制
+
+---
+
 ## [v1.2.1] - 2026-02-14
 
 ### 新增功能
