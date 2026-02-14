@@ -9,19 +9,47 @@ const getUserId = (): string => {
   return userId;
 };
 
+async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T> {
+  try {
+    return await fn();
+  } catch (error: unknown) {
+    if (retries > 0 && isNetworkError(error)) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return withRetry(fn, retries - 1);
+    }
+    throw error;
+  }
+}
+
+function isNetworkError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('network') ||
+      message.includes('connection') ||
+      message.includes('timeout') ||
+      message.includes('fetch') ||
+      message.includes('closed')
+    );
+  }
+  return false;
+}
+
 export const supabaseApi = {
   async getCustomers(): Promise<Customer[]> {
     if (!supabase) return [];
     
-    const userId = getUserId();
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    return withRetry(async () => {
+      const userId = getUserId();
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data?.map(this.mapCustomerFromSupabase) || [];
+      if (error) throw error;
+      return data?.map(this.mapCustomerFromSupabase) || [];
+    });
   },
 
   async addCustomer(customer: Customer): Promise<number> {
@@ -75,15 +103,17 @@ export const supabaseApi = {
   async getTransactions(): Promise<Transaction[]> {
     if (!supabase) return [];
     
-    const userId = getUserId();
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('occurred_at', { ascending: false });
+    return withRetry(async () => {
+      const userId = getUserId();
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('occurred_at', { ascending: false });
 
-    if (error) throw error;
-    return data?.map(this.mapTransactionFromSupabase) || [];
+      if (error) throw error;
+      return data?.map(this.mapTransactionFromSupabase) || [];
+    });
   },
 
   async addTransaction(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<number> {
