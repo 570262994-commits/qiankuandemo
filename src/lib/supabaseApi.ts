@@ -40,6 +40,7 @@ export const supabaseApi = {
     if (!supabase) return [];
     
     return withRetry(async () => {
+      if (!supabase) return [];
       const userId = getUserId();
       const { data, error } = await supabase
         .from('customers')
@@ -104,6 +105,7 @@ export const supabaseApi = {
     if (!supabase) return [];
     
     return withRetry(async () => {
+      if (!supabase) return [];
       const userId = getUserId();
       const { data, error } = await supabase
         .from('transactions')
