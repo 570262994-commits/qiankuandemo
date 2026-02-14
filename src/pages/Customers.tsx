@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Phone, Bell, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Plus, Phone, Bell, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useAuthStore } from '../store/authStore';
@@ -7,6 +7,26 @@ import { TransactionType, CREDIT_LIMIT_UNLIMITED, getCreditStatus, getCreditStat
 import type { Customer, CreditStatus } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
 import { differenceInDays } from 'date-fns';
+
+const AVATAR_COLORS = [
+  'bg-blue-500',
+  'bg-emerald-500',
+  'bg-purple-500',
+  'bg-amber-500',
+  'bg-rose-500',
+  'bg-cyan-500',
+  'bg-indigo-500',
+  'bg-pink-500',
+];
+
+function getAvatarColor(name: string): string {
+  const charCode = name.charCodeAt(0) || 0;
+  return AVATAR_COLORS[charCode % AVATAR_COLORS.length];
+}
+
+function getAvatarLetter(name: string): string {
+  return name.charAt(0).toUpperCase();
+}
 
 interface CustomerWithCalculated extends Customer {
   totalDebt: number;
@@ -175,124 +195,104 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
               return (
                 <div
                   key={customer.id}
-                  className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md active:scale-95 cursor-pointer transition-all"
+                  className="bg-white rounded-2xl shadow-sm p-4 hover:shadow-md active:scale-[0.98] cursor-pointer transition-all"
                   onClick={() => handleEditCustomer(customer)}
                 >
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-gray-900 text-lg">
-                        {customer.name}
-                      </h3>
-                      {customer.isCreditOverdue && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-600 text-xs font-bold rounded-full">
-                          <AlertCircle className="w-3 h-3" />
-                          已超额
-                        </span>
-                      )}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`w-10 h-10 ${getAvatarColor(customer.name)} rounded-full flex items-center justify-center flex-shrink-0`}>
+                      <span className="text-white font-bold text-sm">{getAvatarLetter(customer.name)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-900 text-lg">
+                          {customer.name}
+                        </h3>
+                        {customer.isCreditOverdue && (
+                          <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-xs font-medium rounded-full">
+                            已超额
+                          </span>
+                        )}
+                      </div>
                       {customer.phone && (
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <Phone className="w-3.5 h-3.5" />
+                        <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                          <Phone className="w-3 h-3" />
                           <span className="text-xs">{customer.phone}</span>
                         </div>
                       )}
                     </div>
-                    
-                    <div className="bg-slate-50 rounded-lg p-3 space-y-3 text-sm">
-                      {customer.creditLimit === CREDIT_LIMIT_UNLIMITED ? (
-                        <>
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400">剩余额度</span>
-                            <span className="font-bold text-blue-700">不限额度</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400">信用额度</span>
-                            <span className="font-bold text-blue-700">不限额度</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex justify-between items-baseline">
-                            <span className="text-gray-400">
-                              {customer.isCreditOverdue ? '超出额度' : '剩余额度'}/信用额度
-                            </span>
-                            <div className="flex items-baseline gap-1">
-                              {customer.isCreditOverdue ? (
-                                <span className="text-lg font-bold text-rose-600">
-                                  -¥{Math.abs(customer.remainingCredit).toFixed(0)}
-                                </span>
-                              ) : (
-                                <span className={`text-lg font-bold ${colors?.text || 'text-gray-900'}`}>
-                                  ¥{customer.remainingCredit.toFixed(0)}
-                                </span>
-                              )}
-                              <span className="text-xs text-gray-400">
-                                / ¥{customer.creditLimit.toFixed(0)}
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    {customer.creditLimit === CREDIT_LIMIT_UNLIMITED ? (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 text-sm">信用额度</span>
+                        <span className="font-bold text-blue-600">不限额度</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-gray-500 text-sm">
+                            {customer.isCreditOverdue ? '超出额度' : '剩余额度'}
+                          </span>
+                          <div className="flex items-baseline gap-1">
+                            {customer.isCreditOverdue ? (
+                              <span className="text-xl font-bold text-rose-600">
+                                ¥{Math.abs(customer.remainingCredit).toFixed(0)}
                               </span>
-                            </div>
+                            ) : (
+                              <span className={`text-xl font-bold ${colors?.text || 'text-gray-900'}`}>
+                                ¥{customer.remainingCredit.toFixed(0)}
+                              </span>
+                            )}
                           </div>
-                          {customer.creditLimit > 0 && (
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full rounded-full transition-all ${colors?.progress || 'bg-gray-300'}`}
-                                  style={{ 
-                                    width: customer.isCreditOverdue 
-                                      ? '100%' 
-                                      : `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100))}%` 
-                                  }}
-                                />
-                              </div>
-                              <span className={`text-xs font-medium w-12 text-right ${colors?.text || 'text-gray-400'}`}>
+                        </div>
+                        
+                        {customer.creditLimit > 0 && (
+                          <div className="mb-2">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-400">信用额度 ¥{customer.creditLimit.toFixed(0)}</span>
+                              <span className={`text-xs font-medium ${colors?.text || 'text-gray-400'}`}>
                                 {customer.isCreditOverdue 
                                   ? '超额'
                                   : `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100)).toFixed(0)}%`
                                 }
                               </span>
                             </div>
-                          )}
-                          {customer.isCreditOverdue && (
-                            <div className="flex items-center gap-1 text-rose-600 text-xs">
-                              <AlertCircle className="w-3.5 h-3.5" />
-                              <span>超出额度 ¥{Math.abs(customer.remainingCredit).toFixed(0)}，请引导客户先还款</span>
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all ${customer.isCreditOverdue ? 'bg-rose-500' : (colors?.progress || 'bg-gray-300')}`}
+                                style={{ 
+                                  width: customer.isCreditOverdue 
+                                    ? '100%' 
+                                    : `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100))}%` 
+                                }}
+                              />
                             </div>
-                          )}
-                        </>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">固定账期</span>
-                        <div className="flex items-center gap-2">
-                          {customer.paymentTerm <= 0 || customer.paymentTerm === null ? (
-                            <span 
-                              className="text-blue-500 cursor-pointer hover:underline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditCustomer(customer);
-                              }}
-                            >
-                              未设置
-                            </span>
-                          ) : (
-                            <>
-                              <span className="font-bold text-gray-900">{customer.paymentTerm} 天</span>
-                              {customer.isOverdue ? (
-                                <span className="flex items-center gap-1 text-red-600 font-bold">
-                                  <AlertTriangle className="w-3.5 h-3.5" />
-                                  已逾期 {Math.abs(customer.daysUntilDue)} 天
-                                </span>
-                              ) : customer.hasDebt && customer.daysUntilDue === 0 ? (
-                                <span className="flex items-center gap-1 text-orange-500">
-                                  今日到期
-                                </span>
-                              ) : customer.hasDebt && customer.daysUntilDue <= 3 ? (
-                                <span className="flex items-center gap-1 text-amber-500">
-                                  <Bell className="w-3.5 h-3.5" />
-                                  剩余 {customer.daysUntilDue} 天
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-1.5 text-gray-500 text-sm">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>账期 {customer.paymentTerm || 0} 天</span>
                       </div>
+                      {customer.isOverdue ? (
+                        <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-xs font-medium rounded-full flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          逾期 {Math.abs(customer.daysUntilDue)} 天
+                        </span>
+                      ) : customer.hasDebt && customer.daysUntilDue === 0 ? (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-600 text-xs font-medium rounded-full">
+                          今日到期
+                        </span>
+                      ) : customer.hasDebt && customer.daysUntilDue <= 3 ? (
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-600 text-xs font-medium rounded-full flex items-center gap-1">
+                          <Bell className="w-3 h-3" />
+                          剩余 {customer.daysUntilDue} 天
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>

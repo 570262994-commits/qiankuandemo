@@ -29,16 +29,16 @@ export default function Profile({ onOpenLogin }: ProfileProps) {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           {user ? (
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-7 h-7 text-blue-600" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{user.email}</p>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 break-all">{user.email}</p>
                 <p className="text-sm text-gray-500">已登录</p>
               </div>
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">退出</span>
