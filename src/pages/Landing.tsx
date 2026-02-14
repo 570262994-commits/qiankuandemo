@@ -19,7 +19,7 @@ interface LandingProps {
 export default function Landing({ onGetStarted }: LandingProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState<'gentle' | 'formal'>('gentle');
+  const [selectedStyle, setSelectedStyle] = useState<'gentle' | 'formal' | 'humor'>('gentle');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,9 +169,51 @@ export default function Landing({ onGetStarted }: LandingProps) {
               </button>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* 交互演示区域 */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      {/* Pain Points Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-10">
+            这些烦恼，你有吗？
+          </h2>
+          
+          <div className="grid gap-3">
+            {painPoints.map((point, index) => (
+              <div 
+                key={index}
+                className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
+                  point.highlight 
+                    ? 'bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 shadow-sm' 
+                    : 'bg-white shadow-sm'
+                }`}
+              >
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+                  {point.illustration}
+                </div>
+                <span className={`text-gray-700 ${point.highlight ? 'font-medium' : ''}`}>{point.text}</span>
+              </div>
+            ))}
+          </div>
+          
+          <p className="text-center mt-8 text-gray-500">
+            别急，<span className="text-purple-600 font-medium">客户欠款助手</span> 帮你搞定！
+          </p>
+        </div>
+      </section>
+
+      {/* AI Demo Section - 交互演示区域 */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              AI 帮你催款，不伤感情
+            </h2>
+            <p className="text-gray-500 text-sm">一键生成话术，复制粘贴就能用</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
             {/* 左侧：AI 选择界面 */}
             <div className="bg-white rounded-2xl shadow-xl p-5 border border-gray-100">
               <div className="flex items-center gap-2 mb-4 pb-3 border-b">
@@ -190,7 +232,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 </div>
               </div>
               <p className="text-xs text-gray-400 mb-3">选择催款风格</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <button 
                   onClick={() => setSelectedStyle('gentle')}
                   className={`p-3 rounded-xl text-center transition-all ${
@@ -212,6 +254,17 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 >
                   <span className="text-lg">💼</span>
                   <p className={`text-xs font-medium mt-1 ${selectedStyle === 'formal' ? 'text-purple-700' : 'text-gray-500'}`}>正式版</p>
+                </button>
+                <button 
+                  onClick={() => setSelectedStyle('humor')}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    selectedStyle === 'humor' 
+                      ? 'bg-purple-100 border-2 border-purple-400' 
+                      : 'bg-gray-50 border border-gray-200 hover:border-purple-200'
+                  }`}
+                >
+                  <span className="text-lg">😄</span>
+                  <p className={`text-xs font-medium mt-1 ${selectedStyle === 'humor' ? 'text-purple-700' : 'text-gray-500'}`}>幽默版</p>
                 </button>
               </div>
             </div>
@@ -237,7 +290,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
                       </div>
                     </div>
                   </>
-                ) : (
+                ) : selectedStyle === 'formal' ? (
                   <>
                     <div className="flex justify-end">
                       <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
@@ -252,6 +305,24 @@ export default function Landing({ onGetStarted }: LandingProps) {
                     <div className="flex justify-end">
                       <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
                         <p className="text-sm text-gray-800">好的，感谢张总支持！</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">张老板，年货钱3000块，再不给我就要去你家蹭饭啦 😂</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="bg-white rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">哈哈，马上转！别来蹭饭 🤣</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                        <p className="text-sm text-gray-800">成交！谢啦~</p>
                       </div>
                     </div>
                   </>
@@ -274,7 +345,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
 
       {/* App Screenshots Section */}
       <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
               看看长什么样
@@ -282,7 +353,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
             <p className="text-gray-500 text-sm">简洁好用，一看就会</p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 gap-6">
             {/* 首页截图 */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
               <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white text-xs font-medium">
@@ -355,64 +426,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 </div>
               </div>
             </div>
-
-            {/* AI催款截图 */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-              <div className="bg-gradient-to-r from-violet-500 to-purple-500 px-4 py-2 text-white text-xs font-medium">
-                AI催款助手
-              </div>
-              <div className="p-3 bg-slate-50">
-                <div className="bg-white rounded-xl p-3 shadow-sm mb-2">
-                  <p className="text-xs text-gray-400 mb-1">选择风格</p>
-                  <div className="flex gap-1">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-600 rounded text-xs">温和</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs">正式</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded text-xs">幽默</span>
-                  </div>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 border border-purple-100">
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    "张老板，之前拿的年货3000块，方便时转一下哈~祝生意兴隆！"
-                  </p>
-                </div>
-                <button className="w-full mt-2 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1">
-                  <Copy className="w-3 h-3" />
-                  复制文案
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Pain Points Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center mb-10">
-            这些烦恼，你有吗？
-          </h2>
-          
-          <div className="grid gap-3">
-            {painPoints.map((point, index) => (
-              <div 
-                key={index}
-                className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
-                  point.highlight 
-                    ? 'bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 shadow-sm' 
-                    : 'bg-white shadow-sm'
-                }`}
-              >
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
-                  {point.illustration}
-                </div>
-                <span className={`text-gray-700 ${point.highlight ? 'font-medium' : ''}`}>{point.text}</span>
-              </div>
-            ))}
-          </div>
-          
-          <p className="text-center mt-8 text-gray-500">
-            别急，<span className="text-purple-600 font-medium">客户欠款助手</span> 帮你搞定！
-          </p>
         </div>
       </section>
 
