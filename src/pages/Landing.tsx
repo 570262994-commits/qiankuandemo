@@ -203,6 +203,93 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </div>
       </section>
 
+      {/* App Screenshots Section */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              看看长什么样
+            </h2>
+            <p className="text-gray-500 text-sm">简洁好用，一看就会</p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6">
+            {/* 首页截图 */}
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white text-xs font-medium">
+                首页 · 异常提醒
+              </div>
+              <div className="p-3 bg-slate-50">
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
+                    <p className="text-xs text-gray-400">总待收</p>
+                    <p className="text-sm font-bold text-gray-900">¥5,800</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
+                    <p className="text-xs text-gray-400">总欠款</p>
+                    <p className="text-sm font-bold text-rose-500">¥8,000</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
+                    <p className="text-xs text-gray-400">总还款</p>
+                    <p className="text-sm font-bold text-emerald-500">¥2,200</p>
+                  </div>
+                </div>
+                {/* Alert Card */}
+                <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-rose-400">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-bold text-gray-900 text-sm">张老板</span>
+                    <span className="text-rose-500 font-bold text-sm">¥3,000</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-rose-500 mb-2">
+                    <span>⚠️</span>
+                    <span>逾期14天</span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">备注: 年货采购</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 客户档案截图 */}
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-white text-xs font-medium">
+                客户档案
+              </div>
+              <div className="p-3 bg-slate-50 space-y-2">
+                {/* Customer Card 1 */}
+                <div className="bg-white rounded-xl p-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-xs font-bold">张</div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 text-sm">张老板</p>
+                      <p className="text-xs text-gray-400">欠款 ¥3,000</p>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full w-3/4 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"></div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">额度 75% · 账期30天</p>
+                </div>
+                {/* Customer Card 2 */}
+                <div className="bg-white rounded-xl p-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-xs font-bold">李</div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 text-sm">李姐</p>
+                      <p className="text-xs text-gray-400">欠款 ¥2,800</p>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full w-1/2 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"></div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">额度 50% · 账期15天</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* AI Demo Section - 交互演示区域 */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
@@ -336,93 +423,6 @@ export default function Landing({ onGetStarted }: LandingProps) {
                   <button className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                     <Copy className="w-4 h-4 text-white" />
                   </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* App Screenshots Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              看看长什么样
-            </h2>
-            <p className="text-gray-500 text-sm">简洁好用，一看就会</p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6">
-            {/* 首页截图 */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-              <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-white text-xs font-medium">
-                首页 · 异常提醒
-              </div>
-              <div className="p-3 bg-slate-50">
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
-                    <p className="text-xs text-gray-400">总待收</p>
-                    <p className="text-sm font-bold text-gray-900">¥5,800</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
-                    <p className="text-xs text-gray-400">总欠款</p>
-                    <p className="text-sm font-bold text-rose-500">¥8,000</p>
-                  </div>
-                  <div className="bg-white rounded-lg p-2 text-center shadow-sm">
-                    <p className="text-xs text-gray-400">总还款</p>
-                    <p className="text-sm font-bold text-emerald-500">¥2,200</p>
-                  </div>
-                </div>
-                {/* Alert Card */}
-                <div className="bg-white rounded-xl p-3 shadow-sm border-l-4 border-rose-400">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-gray-900 text-sm">张老板</span>
-                    <span className="text-rose-500 font-bold text-sm">¥3,000</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-rose-500 mb-2">
-                    <span>⚠️</span>
-                    <span>逾期14天</span>
-                  </div>
-                  <p className="text-xs text-gray-400 truncate">备注: 年货采购</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 客户档案截图 */}
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-white text-xs font-medium">
-                客户档案
-              </div>
-              <div className="p-3 bg-slate-50 space-y-2">
-                {/* Customer Card 1 */}
-                <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-xs font-bold">张</div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">张老板</p>
-                      <p className="text-xs text-gray-400">欠款 ¥3,000</p>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full w-3/4 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"></div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">额度 75% · 账期30天</p>
-                </div>
-                {/* Customer Card 2 */}
-                <div className="bg-white rounded-xl p-3 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center text-white text-xs font-bold">李</div>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">李姐</p>
-                      <p className="text-xs text-gray-400">欠款 ¥2,800</p>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full w-1/2 bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"></div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">额度 50% · 账期15天</p>
                 </div>
               </div>
             </div>
