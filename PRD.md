@@ -452,7 +452,7 @@ qiankuandemo/
 ---
 
 ## 6. 版本历史
-
+/Users/yangna/qiankuandemo/landing-page.png
 ### v1.2.2（当前版本）
 
 #### 新增功能

@@ -2,16 +2,11 @@ import { useState, useEffect } from 'react';
 import { 
   Bot, 
   Shield, 
-  Bell, 
-  Smartphone, 
-  Cloud, 
-  Edit3, 
   Copy,
   Check,
   ArrowRight,
   Menu,
   X,
-  AlertTriangle
 } from 'lucide-react';
 
 interface LandingProps {
@@ -37,51 +32,29 @@ export default function Landing({ onGetStarted }: LandingProps) {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const features = [
+  const coreFeatures = [
     {
       icon: Bot,
-      title: 'AI帮催款',
-      description: '一键生成催款话术，复制粘贴就能用',
+      title: 'AI 催款',
+      description: '一键生成催款话术，复制粘贴就能用，不伤感情还能要回钱',
       color: 'from-purple-500 to-pink-500',
+      highlights: ['温和版', '正式版', '幽默版'],
     },
     {
       icon: Shield,
-      title: '额度预警',
-      description: '谁快超额度了，一眼就知道',
+      title: '信用预警',
+      description: '谁快超额度了，一眼就知道，防止坏账于未然',
       color: 'from-emerald-500 to-teal-500',
-    },
-    {
-      icon: Bell,
-      title: '逾期提醒',
-      description: '谁欠多久了，自动提醒你',
-      color: 'from-amber-500 to-orange-500',
-    },
-    {
-      icon: Smartphone,
-      title: '手机桌面',
-      description: '添加到桌面，像App一样用',
-      color: 'from-blue-500 to-cyan-500',
-    },
-    {
-      icon: Cloud,
-      title: '换机不丢',
-      description: '数据云端存，换手机也不丢',
-      color: 'from-indigo-500 to-purple-500',
-    },
-    {
-      icon: Edit3,
-      title: '秒记账',
-      description: '3秒记一笔，简单好用',
-      color: 'from-rose-500 to-pink-500',
+      highlights: ['额度监控', '逾期提醒', '账期管理'],
     },
   ];
 
   const painPoints = [
-    '谁欠我钱？欠多少？想不起来',
-    '熟人欠款，不好意思开口要',
-    '要账太直接，怕伤感情',
-    '客户赊账太多，收不回来',
-    '换个手机，账本全没了',
+    { emoji: '💸', text: '"回头给"是多少生意的终点？', highlight: true },
+    { emoji: '😰', text: '"不好意思问"让多少利润变坏账？', highlight: true },
+    { emoji: '🤔', text: '谁欠我钱？欠多少？想不起来', highlight: false },
+    { emoji: '😬', text: '熟人欠款，开口要钱太尴尬', highlight: false },
+    { emoji: '📱', text: '换个手机，账本全没了', highlight: false },
   ];
 
   const testimonials = [
@@ -175,19 +148,14 @@ export default function Landing({ onGetStarted }: LandingProps) {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-              客户欠款助手
+          <div className="text-center mb-12">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+              别让欠款拖垮你的生意
             </h1>
-            <p className="text-xl sm:text-2xl bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent font-bold mb-6">
-              催款不尴尬，要账有方法
-            </p>
-            <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
-              小本生意的记账神器<br />
-              谁欠你钱、欠多久、欠多少<br />
-              一目了然
+            <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+              AI 催款助手 + 信用预警，用技术守住你的辛苦钱
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -198,6 +166,71 @@ export default function Landing({ onGetStarted }: LandingProps) {
                 免费用起来
                 <ArrowRight className="w-5 h-5" />
               </button>
+            </div>
+          </div>
+
+          {/* 交互演示区域 */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* 左侧：AI 选择界面 */}
+            <div className="bg-white rounded-2xl shadow-xl p-5 border border-gray-100">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-gray-900">AI 催款助手</span>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-medium text-gray-900">张老板</p>
+                    <p className="text-xs text-rose-500">逾期14天 · ¥3,000</p>
+                  </div>
+                  <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center text-lg">👤</div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mb-3">选择催款风格</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-purple-100 border-2 border-purple-400 rounded-xl text-center">
+                  <span className="text-lg">🌸</span>
+                  <p className="text-xs font-medium text-purple-700 mt-1">温和版</p>
+                </div>
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                  <span className="text-lg">💼</span>
+                  <p className="text-xs font-medium text-gray-500 mt-1">正式版</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 右侧：微信对话模拟 */}
+            <div className="bg-[#EDEDED] rounded-2xl shadow-xl p-4">
+              <div className="bg-[#EDEDED] space-y-3">
+                {/* 微信消息气泡 */}
+                <div className="flex justify-end">
+                  <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                    <p className="text-sm text-gray-800">张老板，之前拿的年货3000块，方便时转一下哈~</p>
+                  </div>
+                </div>
+                <div className="flex justify-start">
+                  <div className="bg-white rounded-lg px-3 py-2 max-w-[80%]">
+                    <p className="text-sm text-gray-800">好的，这就转给你！</p>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <div className="bg-[#95EC69] rounded-lg px-3 py-2 max-w-[80%]">
+                    <p className="text-sm text-gray-800">🙏 谢谢张老板！</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-300">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white rounded-full px-4 py-2">
+                    <p className="text-xs text-gray-400">一键复制，粘贴发送...</p>
+                  </div>
+                  <button className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                    <Copy className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -242,7 +275,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
                     <span className="text-rose-500 font-bold text-sm">¥3,000</span>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-rose-500 mb-2">
-                    <AlertTriangle className="w-3 h-3" />
+                    <span>⚠️</span>
                     <span>逾期14天</span>
                   </div>
                   <p className="text-xs text-gray-400 truncate">备注: 年货采购</p>
@@ -327,10 +360,14 @@ export default function Landing({ onGetStarted }: LandingProps) {
             {painPoints.map((point, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm"
+                className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
+                  point.highlight 
+                    ? 'bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 shadow-sm' 
+                    : 'bg-white shadow-sm'
+                }`}
               >
-                <span className="text-xl">😰</span>
-                <span className="text-gray-700">{point}</span>
+                <span className="text-xl">{point.emoji}</span>
+                <span className={`text-gray-700 ${point.highlight ? 'font-medium' : ''}`}>{point.text}</span>
               </div>
             ))}
           </div>
@@ -341,27 +378,32 @@ export default function Landing({ onGetStarted }: LandingProps) {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Core Features Section */}
       <section id="features" className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              6个功能，够用就好
+              两大核心功能
             </h2>
-            <p className="text-gray-500 text-sm">不搞花里胡哨，专注解决你的问题</p>
+            <p className="text-gray-500 text-sm">简单好用，专注解决你的问题</p>
           </div>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {features.map((feature, index) => (
+          <div className="grid md:grid-cols-2 gap-4">
+            {coreFeatures.map((feature, index) => (
               <div 
                 key={index}
-                className="group p-3 sm:p-4 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
+                className="group p-5 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all"
               >
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-2`}>
-                  <feature.icon className="w-4 h-4 text-white" />
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4`}>
+                  <feature.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900 mb-0.5">{feature.title}</h3>
-                <p className="text-gray-500 text-xs">{feature.description}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-500 text-sm mb-4">{feature.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {feature.highlights.map((h, i) => (
+                    <span key={i} className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-full">{h}</span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -486,7 +528,7 @@ export default function Landing({ onGetStarted }: LandingProps) {
         <div className="max-w-xl mx-auto">
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-8 text-center text-white">
             <h2 className="text-xl sm:text-2xl font-bold mb-2">
-              别让欠款变成坏账
+              别让欠款拖垮你的生意
             </h2>
             <p className="text-white/80 mb-6 text-sm">
               免费用，不用下载，打开就能记账
