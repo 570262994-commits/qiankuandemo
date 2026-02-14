@@ -9,11 +9,11 @@ interface AICollectionDialogProps {
   data: Omit<CollectionData, 'style'>;
 }
 
-const STYLES: { value: CollectionStyle; label: string; desc: string }[] = [
-  { value: 'polite', label: '礼貌温和', desc: '适合首次催款、关系好的客户' },
-  { value: 'professional', label: '专业正式', desc: '适合B2B客户、商务往来' },
-  { value: 'gentle', label: '委婉提醒', desc: '适合熟人、不好意思开口' },
-  { value: 'humorous', label: '幽默轻松', desc: '适合老客户、年轻客户' },
+const STYLES: { value: CollectionStyle; label: string; desc: string; icon: string }[] = [
+  { value: 'polite', label: '礼貌温和', desc: '适合首次催款、关系好的客户', icon: '🌸' },
+  { value: 'professional', label: '专业正式', desc: '适合B2B客户、商务往来', icon: '💼' },
+  { value: 'gentle', label: '委婉提醒', desc: '适合熟人、不好意思开口', icon: '💭' },
+  { value: 'humorous', label: '幽默轻松', desc: '适合老客户、年轻客户', icon: '😄' },
 ];
 
 export default function AICollectionDialog({ isOpen, onClose, data }: AICollectionDialogProps) {
@@ -61,7 +61,7 @@ export default function AICollectionDialog({ isOpen, onClose, data }: AICollecti
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -98,31 +98,28 @@ export default function AICollectionDialog({ isOpen, onClose, data }: AICollecti
 
               <div className="mb-6">
                 <p className="text-sm font-medium text-gray-700 mb-3">选择催款风格</p>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {STYLES.map((s) => (
                     <button
                       key={s.value}
                       onClick={() => setStyle(s.value)}
-                      className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
                         style === s.value
-                          ? 'border-purple-500 bg-purple-50'
-                          : 'border-gray-100 hover:border-gray-200'
+                          ? 'border-purple-500 bg-purple-50 shadow-[0_2px_12px_-2px_rgba(168,85,247,0.2)]'
+                          : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            style === s.value ? 'border-purple-500' : 'border-gray-300'
-                          }`}
-                        >
-                          {style === s.value && (
-                            <div className="w-3 h-3 rounded-full bg-purple-500" />
-                          )}
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl mt-0.5">{s.icon}</span>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 mb-0.5">{s.label}</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{s.label}</p>
-                          <p className="text-xs text-gray-500">{s.desc}</p>
-                        </div>
+                        {style === s.value && (
+                          <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
                       </div>
                     </button>
                   ))}
@@ -138,15 +135,18 @@ export default function AICollectionDialog({ isOpen, onClose, data }: AICollecti
               <div className="flex gap-3">
                 <button
                   onClick={handleClose}
-                  className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                  className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleGenerate}
                   disabled={loading}
-                  className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 relative overflow-hidden"
                 >
+                  {loading && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                  )}
                   {loading ? (
                     <>
                       <RefreshCw className="w-5 h-5 animate-spin" />
@@ -175,14 +175,14 @@ export default function AICollectionDialog({ isOpen, onClose, data }: AICollecti
               <div className="flex gap-3">
                 <button
                   onClick={handleBack}
-                  className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-5 h-5" />
                   换一种风格
                 </button>
                 <button
                   onClick={handleCopy}
-                  className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                   {copied ? (
                     <>

@@ -713,14 +713,41 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                       });
                     }}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-900">{customer.customerName}</span>
                         <span className="text-xs text-red-600 font-medium">已逾期 {customer.overdueDays} 天</span>
                       </div>
-                      {customer.overdueCount > 1 && (
+                      {customer.overdueCount > 1 ? (
                         <div className="text-xs text-gray-400 mt-1">
                           共 {customer.overdueCount} 笔逾期，点击查看明细
+                        </div>
+                      ) : customer.overdueTransactions[0]?.note && (
+                        <div 
+                          className="mt-2 flex items-start gap-1.5 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleNoteExpand(customer.overdueTransactions[0].id, e);
+                          }}
+                        >
+                          <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
+                          <div className="flex-1 min-w-0 flex items-start gap-1">
+                            <p className="text-xs text-gray-500 leading-relaxed flex-1">
+                              {expandedNotes.has(customer.overdueTransactions[0].id) 
+                                ? customer.overdueTransactions[0].note
+                                : customer.overdueTransactions[0].note.slice(0, 14) + (customer.overdueTransactions[0].note.length > 14 ? '...' : '')
+                              }
+                            </p>
+                            {customer.overdueTransactions[0].note.length > 14 && (
+                              <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                                {expandedNotes.has(customer.overdueTransactions[0].id) ? (
+                                  <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                  <ChevronDown className="w-3 h-3" />
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -775,8 +802,11 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                               >
                                 <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                                 <div className="flex-1 min-w-0 flex items-start gap-1">
-                                  <span className={`text-xs text-gray-600 flex-1 ${expandedNotes.has(tx.id) ? '' : 'line-clamp-1'}`}>
-                                    {tx.note}
+                                  <span className="text-xs text-gray-600 flex-1">
+                                    {expandedNotes.has(tx.id) 
+                                      ? tx.note
+                                      : tx.note!.slice(0, 14) + (tx.note!.length > 14 ? '...' : '')
+                                    }
                                   </span>
                                   {tx.note.length > 14 && (
                                     <span className="flex-shrink-0 text-gray-400">
@@ -813,7 +843,7 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                         });
                         setShowAICollection(true);
                       }}
-                      className="flex-1 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
+                      className="flex-1 py-2.5 bg-purple-50 text-purple-600 text-sm font-medium rounded-lg flex items-center justify-center gap-1.5 hover:bg-purple-100 transition-colors border border-purple-200"
                     >
                       <Wand2 className="w-4 h-4" />
                       AI 催款
@@ -912,10 +942,11 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                       >
                         <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                         <div className="flex-1 min-w-0 flex items-start gap-1">
-                          <p className={`text-xs text-gray-500 leading-relaxed flex-1 ${
-                            expandedNotes.has(transaction.id!) ? '' : 'line-clamp-1'
-                          }`}>
-                            {transaction.note}
+                          <p className="text-xs text-gray-500 leading-relaxed flex-1">
+                            {expandedNotes.has(transaction.id!) 
+                              ? transaction.note
+                              : transaction.note!.slice(0, 14) + (transaction.note!.length > 14 ? '...' : '')
+                            }
                           </p>
                           {transaction.note.length > 14 && (
                             <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
