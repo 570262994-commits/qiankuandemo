@@ -15,9 +15,10 @@ const SYSTEM_PROMPT = `你是一个专业的催款文案助手，帮助小微经
 1. 文案简洁，不超过150字
 2. 语气要符合选择的风格
 3. 适当使用1-2个表情符号
-4. 要包含关键信息：金额、逾期天数
-5. 结尾要有行动号召
-6. 直接输出文案，不要有其他解释
+4. 要包含关键信息：总金额、最长逾期天数
+5. 如果有多笔欠款，简要提及笔数
+6. 结尾要有行动号召
+7. 直接输出文案，不要有其他解释
 
 风格说明：
 - 礼貌温和：友善提醒，不给压力，适合首次催款
@@ -26,12 +27,19 @@ const SYSTEM_PROMPT = `你是一个专业的催款文案助手，帮助小微经
 - 幽默轻松：轻松调侃，不失礼貌，适合老客户`;
 
 function buildUserPrompt(data: CollectionData): string {
+  const itemsDesc = data.overdueItems.length > 1
+    ? data.overdueItems.map((item, i) => 
+        `第${i + 1}笔：${item.amount}元，逾期${item.overdueDays}天${item.note ? `（${item.note}）` : ''}`
+      ).join('；')
+    : `${data.amount}元，逾期${data.overdueDays}天${data.overdueItems[0]?.note ? `（${data.overdueItems[0].note}）` : ''}`;
+
   return `请生成一条催款文案：
 
 客户姓名：${data.customerName}
-逾期金额：${data.amount}元
-逾期天数：${data.overdueDays}天
-备注：${data.note || '无'}
+欠款笔数：${data.overdueItems.length}笔
+欠款明细：${itemsDesc}
+逾期总额：${data.amount}元
+最长逾期：${data.overdueDays}天
 风格：${STYLE_NAMES[data.style]}
 
 请直接输出文案：`;

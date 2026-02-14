@@ -33,10 +33,17 @@ export interface CustomerWithBalance extends Customer {
 
 export type CollectionStyle = 'polite' | 'professional' | 'gentle' | 'humorous';
 
+export interface OverdueItem {
+  amount: number;
+  overdueDays: number;
+  note?: string;
+  occurredAt: Date;
+}
+
 export interface CollectionData {
   customerName: string;
   amount: number;
   overdueDays: number;
-  note?: string;
+  overdueItems: OverdueItem[];
   style: CollectionStyle;
 }

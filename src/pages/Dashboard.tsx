@@ -67,7 +67,12 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
     customerName: string;
     amount: number;
     overdueDays: number;
-    note?: string;
+    overdueItems: Array<{
+      amount: number;
+      overdueDays: number;
+      note?: string;
+      occurredAt: Date;
+    }>;
   } | null>(null);
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -836,7 +841,12 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                           customerName: customer.customerName,
                           amount: customer.overdueAmount,
                           overdueDays: customer.overdueDays,
-                          note: customer.overdueTransactions[0]?.note,
+                          overdueItems: customer.overdueTransactions.map(tx => ({
+                            amount: tx.amount,
+                            overdueDays: tx.overdueDays,
+                            note: tx.note,
+                            occurredAt: new Date(tx.date),
+                          })),
                         });
                         setShowAICollection(true);
                       }}

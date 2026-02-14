@@ -193,19 +193,19 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">{isEditMode ? '编辑记录' : '记一笔'}</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-              <X className="w-6 h-6" />
+      <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-bold">{isEditMode ? '编辑记录' : '记一笔'}</h2>
+            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+          <div className="flex bg-gray-100 rounded-lg p-1 mb-5">
             <button
               onClick={() => setType(TransactionType.DEBT)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+              className={`flex-1 py-2 px-4 rounded-md font-medium text-sm transition-all ${
                 type === TransactionType.DEBT
                   ? 'bg-white text-red-600 shadow-sm'
                   : 'text-gray-600'
@@ -215,7 +215,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
             </button>
             <button
               onClick={() => setType(TransactionType.PAYBACK)}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all ${
+              className={`flex-1 py-2 px-4 rounded-md font-medium text-sm transition-all ${
                 type === TransactionType.PAYBACK
                   ? 'bg-white text-green-600 shadow-sm'
                   : 'text-gray-600'
@@ -225,9 +225,9 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">选择客户</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">选择客户</label>
               <button
                 onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
                 className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-colors"
@@ -285,9 +285,9 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">金额</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">金额</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-gray-400">¥</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl text-gray-400">¥</span>
                 <input
                   ref={amountInputRef}
                   type="number"
@@ -296,40 +296,40 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
                   placeholder="0"
                   step="1"
                   min="0"
-                  className="w-full pl-12 pr-4 py-4 text-3xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                  className="w-full pl-11 pr-4 py-3 text-2xl font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">日期</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">日期</label>
               <div className="relative">
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   max={format(new Date(), 'yyyy-MM-dd')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">备注（选填）</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">备注（选填）</label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="添加备注..."
                 rows={2}
                 maxLength={100}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
               />
             </div>
 
             <button
               onClick={handleSubmit}
               disabled={!selectedCustomer || !amount || parseFloat(amount) <= 0 || isSubmitting}
-              className="w-full py-4 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 active:scale-98 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 active:scale-98 transition-all disabled:bg-gray-300 disabled:cursor-not-allowed mt-2"
             >
               {isSubmitting ? '提交中...' : (isEditMode ? '确认修改' : '确认提交')}
             </button>

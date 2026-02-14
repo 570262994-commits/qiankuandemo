@@ -7,6 +7,40 @@
 
 ---
 
+## [v1.2.1] - 2026-02-14
+
+### 新增功能
+
+- ✨ AI 催款助手多笔逾期支持
+  - 展示逾期笔数、最长逾期天数、逾期总额
+  - 多笔逾期时可展开查看每笔明细（日期、逾期天数、金额、备注）
+  - AI 生成文案时包含所有逾期记录信息
+  - 新增 `OverdueItem` 类型定义
+
+### UI优化
+
+- 💄 统一底部弹窗视觉规范
+  - 弹框最大高度从 90vh 降至 85vh
+  - 内边距从 p-6 改为 p-5
+  - 标题字号从 text-xl 改为 text-lg
+  - 按钮内边距从 py-3 改为 py-2.5
+  - 表单间距从 space-y-4 改为 space-y-3
+
+- 💄 更新视觉规范文档 (DESIGN_SPEC.md)
+  - 新增 v1.2 版本记录
+  - 统一所有组件样式规范
+
+### 文件变更
+
+- 修改文件：
+  - `src/types/index.ts` - 新增 OverdueItem 类型
+  - `src/pages/Dashboard.tsx` - 传递所有逾期记录
+  - `src/components/AICollectionDialog.tsx` - 展示多笔逾期明细
+  - `src/lib/aiCollection.ts` - AI 生成包含所有逾期信息
+  - `docs/DESIGN_SPEC.md` - 更新视觉规范
+
+---
+
 ## [v1.2.0] - 2026-02-14
 
 ### 新增功能

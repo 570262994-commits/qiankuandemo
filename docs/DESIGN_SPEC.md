@@ -67,7 +67,7 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, s
 
 | 层级 | 字号 | 字重 | 行高 | 用途 |
 |------|------|------|------|------|
-| **H1** | `text-xl` (20px) | `font-bold` | 1.5 | 弹框标题 |
+| **H1** | `text-lg` (18px) | `font-bold` | 1.5 | 弹框标题 |
 | **H2** | `text-lg` (18px) | `font-semibold` | 1.5 | 卡片标题 |
 | **H3** | `text-base` (16px) | `font-medium` | 1.5 | 小标题 |
 | **正文** | `text-sm` (14px) | `font-normal` | 1.5 | 正文内容 |
@@ -91,19 +91,21 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, s
 | 类名 | 值 | 用途 |
 |------|-----|------|
 | `p-1` | 4px | 紧凑内边距 |
+| `p-1.5` | 6px | 关闭按钮内边距 |
 | `p-2` | 8px | 小内边距 |
 | `p-3` | 12px | 中等内边距 |
 | `p-4` | 16px | 标准内边距 |
-| `p-6` | 24px | 大内边距（弹框内容） |
+| `p-5` | 20px | 弹框内容内边距 |
 
 ### 4.2 组件间距
 
 | 场景 | 间距 |
 |------|------|
-| 表单项之间 | `space-y-4` (16px) |
+| 表单项之间 | `space-y-3` (12px) |
 | 按钮组之间 | `gap-3` (12px) |
 | 卡片之间 | `space-y-3` (12px) |
-| 弹框标题与内容 | `mb-6` (24px) |
+| 弹框标题与内容 | `mb-5` (20px) |
+| 标签与输入框 | `mb-1.5` (6px) |
 
 ---
 
@@ -161,8 +163,8 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, s
 | 尺寸 | 内边距 | 字号 | 用途 |
 |------|--------|------|------|
 | **小** | `py-2 px-3` | `text-sm` | 筛选标签 |
-| **中** | `py-3` | `text-base` | 弹框按钮 |
-| **大** | `py-4` | `text-base font-bold` | 提交按钮 |
+| **标准** | `py-2.5` | `text-sm` | 弹框按钮（统一规范） |
+| **大** | `py-3` | `text-base font-bold` | 特殊强调按钮 |
 
 ### 7.3 按钮状态
 
@@ -195,13 +197,13 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
   <div className="absolute inset-0 bg-black/50" onClick={onClose} />
   
   {/* 内容层 */}
-  <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-    <div className="p-6">
+  <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto">
+    <div className="p-5">
       {/* 头部 */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">{title}</h2>
-        <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-          <X className="w-6 h-6" />
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-lg font-bold">{title}</h2>
+        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors">
+          <X className="w-5 h-5" />
         </button>
       </div>
       
@@ -216,12 +218,12 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
 
 | 属性 | 值 |
 |------|-----|
-| 最大高度 | `max-h-[90vh]` |
-| 内边距 | `p-6` |
+| 最大高度 | `max-h-[85vh]` |
+| 内边距 | `p-5` |
 | 顶部圆角 | `rounded-t-3xl` |
 | 阴影 | `shadow-2xl` |
-| 标题字号 | `text-xl font-bold` |
-| 关闭按钮 | `w-6 h-6`, `p-2` |
+| 标题字号 | `text-lg font-bold` |
+| 关闭按钮 | `w-5 h-5`, `p-1.5` |
 
 ### 8.3 弹框类型
 
@@ -272,7 +274,7 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
 ```jsx
 <input
   type="text"
-  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
   placeholder="请输入..."
 />
 ```
@@ -280,7 +282,7 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
 ### 10.2 标签
 
 ```jsx
-<label className="block text-sm font-medium text-gray-700 mb-2">
+<label className="block text-sm font-medium text-gray-700 mb-1.5">
   标签名称 <span className="text-red-500">*</span>
 </label>
 ```
@@ -288,7 +290,7 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
 ### 10.3 表单组
 
 ```jsx
-<div className="space-y-4">
+<div className="space-y-3">
   <div>
     <label>...</label>
     <input>...</input>
@@ -392,20 +394,20 @@ disabled:bg-gray-300 disabled:cursor-not-allowed
 ### 13.3 AI 风格选择卡片
 
 ```jsx
-<button className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+<button className={`w-full p-3 rounded-xl border-2 text-left transition-all duration-200 ${
   selected
     ? 'border-purple-500 bg-purple-50 shadow-[0_2px_12px_-2px_rgba(168,85,247,0.2)]'
     : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
 }`}>
-  <div className="flex items-start gap-3">
-    <span className="text-2xl">{emoji}</span>
+  <div className="flex items-start gap-2.5">
+    <span className="text-xl">{emoji}</span>
     <div className="flex-1">
-      <p className="font-medium text-gray-900">{label}</p>
+      <p className="font-medium text-gray-900 text-sm">{label}</p>
       <p className="text-xs text-gray-500">{description}</p>
     </div>
     {selected && (
-      <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
-        <Check className="w-3 h-3 text-white" />
+      <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center">
+        <Check className="w-2.5 h-2.5 text-white" />
       </div>
     )}
   </div>
@@ -521,19 +523,19 @@ focus:outline-none focus:ring-2 focus:ring-blue-500
 
 ```css
 /* 按钮 */
-.btn-primary { @apply py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors; }
-.btn-secondary { @apply py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors; }
-.btn-ai { @apply py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity; }
+.btn-primary { @apply py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm; }
+.btn-secondary { @apply py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm; }
+.btn-ai { @apply py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm; }
 
 /* 输入框 */
-.input { @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500; }
+.input { @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm; }
 
 /* 卡片 */
 .card { @apply bg-white rounded-xl p-4 shadow-sm; }
 .card-clickable { @apply bg-white rounded-xl shadow-sm overflow-hidden active:scale-[0.98] transition-transform cursor-pointer; }
 
 /* 标签 */
-.label { @apply block text-sm font-medium text-gray-700 mb-2; }
+.label { @apply block text-sm font-medium text-gray-700 mb-1.5; }
 ```
 
 ---
@@ -542,6 +544,7 @@ focus:outline-none focus:ring-2 focus:ring-blue-500
 
 | 版本 | 日期 | 更新内容 |
 |------|------|---------|
+| v1.2 | 2026-02-14 | 统一弹框视觉规范：max-h 85vh、p-5 内边距、text-lg 标题、py-2.5 按钮等 |
 | v1.1 | 2026-02-14 | 新增 AI 功能专属规范、备注展示规范 |
 | v1.0 | 2025-02-14 | 初始版本，整理现有组件规范 |
 
