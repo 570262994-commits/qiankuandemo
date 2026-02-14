@@ -7,6 +7,63 @@
 
 ---
 
+## [v1.1.0] - 2026-02-14
+
+### 新增功能
+
+- ✨ PWA 支持
+  - 添加 manifest.json 配置文件
+  - 添加 Service Worker 离线缓存
+  - 支持添加到手机主屏幕
+  - 应用图标（SVG 格式）
+
+- ✨ iOS 沉浸式状态栏
+  - 添加 `apple-mobile-web-app-capable` 标签
+  - 添加 `apple-mobile-web-app-status-bar-style` 标签
+  - 添加 `viewport-fit=cover` 适配刘海屏
+
+- ✨ iOS 安装引导组件
+  - 自动检测 iOS 设备
+  - 检测是否已添加到主屏幕
+  - 引导用户通过 Safari 分享添加
+  - 本地存储记住用户已关闭提示
+
+- ✨ 动态回调地址
+  - 使用 `window.location.origin` 动态获取当前域名
+  - 本地开发和线上部署自动适配
+  - 支持邮箱登录、注册、密码重置回调
+
+### 部署
+
+- 🚀 Vercel 部署
+  - 配置 GitHub 自动部署
+  - 配置环境变量
+  - 线上地址：https://qiankuandemo.vercel.app
+
+### 文档
+
+- ✨ 添加部署方案文档 (`docs/DEPLOY_PLAN.md`)
+
+### 文件变更
+
+- 新增文件：
+  - `public/manifest.json` - PWA 配置
+  - `public/sw.js` - Service Worker
+  - `public/icons/icon-192.svg` - 应用图标
+  - `public/icons/icon-512.svg` - 应用图标
+  - `src/components/InstallPrompt.tsx` - iOS 安装引导
+  - `docs/DEPLOY_PLAN.md` - 部署方案
+
+- 修改文件：
+  - `index.html` - PWA 标签 + iOS 沉浸式
+  - `src/main.tsx` - 注册 Service Worker
+  - `src/lib/supabase.ts` - 动态回调地址
+  - `src/store/authStore.ts` - 动态 redirectTo
+  - `src/pages/Dashboard.tsx` - 集成安装引导
+  - `src/index.css` - 添加 slide-up 动画
+
+---
+
 ## [v1.0.0] - 2026-02-14
 
 ### 重大变更
