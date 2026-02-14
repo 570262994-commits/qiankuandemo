@@ -96,9 +96,18 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
         return;
       }
       
-      if (customerRemainingCredit !== null && inputAmount > customerRemainingCredit) {
-        warning(`该客户信用额度不足，剩余额度 ¥${customerRemainingCredit.toFixed(2)}`);
-        return;
+      if (customerRemainingCredit !== null) {
+        if (customerRemainingCredit <= 0) {
+          const overAmount = Math.abs(customerRemainingCredit);
+          warning(`录入失败！该客户已超出信用额度 ¥${overAmount.toFixed(0)}，请先引导客户还款`);
+          return;
+        }
+        
+        if (inputAmount > customerRemainingCredit) {
+          const exceedAmount = inputAmount - customerRemainingCredit;
+          warning(`录入失败！该笔金额将导致客户超出信用额度 ¥${exceedAmount.toFixed(0)}`);
+          return;
+        }
       }
     }
 

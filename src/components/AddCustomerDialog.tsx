@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { X, AlertTriangle } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
+import { useTransactionStore } from '../store/transactionStore';
 import { useModalStore } from '../store/modalStore';
 import { useToastStore } from '../store/toastStore';
-import { CREDIT_LIMIT_UNLIMITED } from '../types';
+import { CREDIT_LIMIT_UNLIMITED, TransactionType } from '../types';
 import type { Customer } from '../types';
 
 interface AddCustomerDialogProps {
@@ -21,10 +22,31 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
   const [creditLimit, setCreditLimit] = useState('0');
   const [paymentTerm, setPaymentTerm] = useState('30');
   const { addCustomer, updateCustomer, getCustomerByName } = useCustomerStore();
-  const { warning } = useModalStore();
+  const { transactions } = useTransactionStore();
+  const { warning, confirm } = useModalStore();
   const toast = useToastStore();
 
   const isEditMode = !!customer;
+
+  const resetForm = () => {
+    setName('');
+    setPhone('');
+    setIsUnlimitedCredit(true);
+    setCreditLimit('0');
+    setPaymentTerm('30');
+  };
+
+  const currentDebt = useMemo(() => {
+    if (!customer) return 0;
+    const customerTransactions = transactions.filter(t => t.customerId === customer.id);
+    const totalDebt = customerTransactions
+      .filter(t => t.type === TransactionType.DEBT)
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalPayment = customerTransactions
+      .filter(t => t.type === TransactionType.PAYBACK)
+      .reduce((sum, t) => sum + t.amount, 0);
+    return totalDebt - totalPayment;
+  }, [customer, transactions]);
 
   useEffect(() => {
     if (isOpen) {
@@ -44,14 +66,6 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       }
     }
   }, [isOpen, customer]);
-
-  const resetForm = () => {
-    setName('');
-    setPhone('');
-    setIsUnlimitedCredit(true);
-    setCreditLimit('0');
-    setPaymentTerm('30');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +97,22 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
       return;
     }
 
+    if (isEditMode && customer && !isUnlimitedCredit && finalCreditLimit < currentDebt) {
+      const overAmount = currentDebt - finalCreditLimit;
+      confirm(
+        `当前设置的额度 ¥${finalCreditLimit} 低于已有欠款 ¥${currentDebt.toFixed(0)}，该客户将进入"超额"状态（超出 ¥${overAmount.toFixed(0)}）并无法新增欠款，是否确认？`,
+        async () => {
+          await doSubmit(finalCreditLimit);
+        },
+        '额度设置确认'
+      );
+      return;
+    }
+
+    await doSubmit(finalCreditLimit);
+  };
+
+  const doSubmit = async (finalCreditLimit: number) => {
     try {
       if (isEditMode && customer) {
         if (name !== customer.name) {
@@ -126,6 +156,8 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
   };
 
   if (!isOpen) return null;
+
+  const willExceedCredit = isEditMode && customer && !isUnlimitedCredit && parseInt(creditLimit) < currentDebt;
 
   return (
     <div className="fixed inset-0 z-50">
@@ -189,15 +221,33 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
                 </label>
               </div>
               {!isUnlimitedCredit && (
-                <input
-                  type="number"
-                  value={creditLimit}
-                  onChange={(e) => setCreditLimit(e.target.value)}
-                  placeholder="0"
-                  step="1"
-                  min="0"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <>
+                  <input
+                    type="number"
+                    value={creditLimit}
+                    onChange={(e) => setCreditLimit(e.target.value)}
+                    placeholder="0"
+                    step="1"
+                    min="0"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      willExceedCredit ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                    }`}
+                  />
+                  {isEditMode && customer && currentDebt > 0 && (
+                    <div className="mt-2 px-3 py-2 bg-slate-50 rounded-lg text-xs">
+                      <div className="flex justify-between text-gray-500">
+                        <span>当前欠款</span>
+                        <span className="font-medium text-gray-700">¥{currentDebt.toFixed(0)}</span>
+                      </div>
+                      {willExceedCredit && (
+                        <div className="flex items-center gap-1 mt-1.5 text-amber-600">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>设置后将超出额度 ¥{(currentDebt - parseInt(creditLimit)).toFixed(0)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
               {isUnlimitedCredit && (
                 <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-600 font-medium">

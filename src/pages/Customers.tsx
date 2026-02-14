@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Phone, Bell, AlertTriangle } from 'lucide-react';
+import { Plus, Phone, Bell, AlertTriangle, AlertCircle } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useAuthStore } from '../store/authStore';
-import { TransactionType, CREDIT_LIMIT_UNLIMITED } from '../types';
-import type { Customer } from '../types';
+import { TransactionType, CREDIT_LIMIT_UNLIMITED, getCreditStatus, getCreditStatusColor, getCreditSortPriority } from '../types';
+import type { Customer, CreditStatus } from '../types';
 import AddCustomerDialog from '../components/AddCustomerDialog';
 import { differenceInDays } from 'date-fns';
 
@@ -16,6 +16,8 @@ interface CustomerWithCalculated extends Customer {
   daysUntilDue: number;
   isOverdue: boolean;
   hasDebt: boolean;
+  creditStatus: CreditStatus;
+  isCreditOverdue: boolean;
 }
 
 export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: () => void; onOpenLogin?: () => void }) {
@@ -46,19 +48,22 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
       const hasDebt = balance > 0;
       
       let remainingCredit = customer.creditLimit;
+      let creditStatus: CreditStatus = 'normal';
+      let isCreditOverdue = false;
+      
       if (customer.creditLimit !== CREDIT_LIMIT_UNLIMITED) {
         remainingCredit = customer.creditLimit - balance;
+        creditStatus = getCreditStatus(customer.creditLimit, balance);
+        isCreditOverdue = remainingCredit < 0;
       }
 
       let daysUntilDue = 0;
       let isOverdue = false;
       
       if (hasDebt && customer.paymentTerm > 0) {
-        // 获取所有欠款交易并检查是否有任何一条逾期
         const debtTransactions = customerTransactions
           .filter(t => t.type === TransactionType.DEBT);
         
-        // 检查是否有任何一条欠款记录逾期
         for (const transaction of debtTransactions) {
           const debtDate = new Date(transaction.occurredAt);
           const dueDate = new Date(debtDate);
@@ -67,11 +72,10 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
           const transactionDaysUntilDue = differenceInDays(dueDate, now);
           if (transactionDaysUntilDue < 0) {
             isOverdue = true;
-            break; // 只要有一条逾期就标记为逾期
+            break;
           }
         }
         
-        // 计算最近到期的欠款记录的剩余天数
         let minDaysUntilDue = Infinity;
         for (const transaction of debtTransactions) {
           const debtDate = new Date(transaction.occurredAt);
@@ -96,13 +100,34 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
         daysUntilDue,
         isOverdue,
         hasDebt,
+        creditStatus,
+        isCreditOverdue,
       };
     });
   }, [customers, transactions]);
 
-  const filteredCustomers = customersWithCalculated.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const sortedCustomers = useMemo(() => {
+    return [...customersWithCalculated]
+      .filter(customer => customer.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => {
+        const aIsOverdue = a.isOverdue;
+        const bIsOverdue = b.isOverdue;
+        const aCreditPriority = getCreditSortPriority(a.creditStatus);
+        const bCreditPriority = getCreditSortPriority(b.creditStatus);
+        
+        if (a.isCreditOverdue && !b.isCreditOverdue) return -1;
+        if (!a.isCreditOverdue && b.isCreditOverdue) return 1;
+        
+        if (aIsOverdue && !bIsOverdue) return -1;
+        if (!aIsOverdue && bIsOverdue) return 1;
+        
+        if (aCreditPriority !== bCreditPriority) {
+          return aCreditPriority - bCreditPriority;
+        }
+        
+        return a.name.localeCompare(b.name);
+      });
+  }, [customersWithCalculated, searchQuery]);
 
   const handleEditCustomer = (customer: Customer) => {
     setEditingCustomer(customer);
@@ -132,7 +157,7 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 pb-32">
-        {filteredCustomers.length === 0 ? (
+        {sortedCustomers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-gray-400">
             <p className="text-lg">
               {searchQuery ? '未找到匹配的客户' : '暂无客户，请先添加'}
@@ -140,7 +165,11 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredCustomers.map((customer) => {
+            {sortedCustomers.map((customer) => {
+              const colors = customer.creditLimit !== CREDIT_LIMIT_UNLIMITED 
+                ? getCreditStatusColor(customer.creditStatus)
+                : null;
+              
               return (
                 <div
                   key={customer.id}
@@ -152,6 +181,12 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
                       <h3 className="font-bold text-gray-900 text-lg">
                         {customer.name}
                       </h3>
+                      {customer.isCreditOverdue && (
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-600 text-xs font-bold rounded-full">
+                          <AlertCircle className="w-3 h-3" />
+                          已超额
+                        </span>
+                      )}
                       {customer.phone && (
                         <div className="flex items-center gap-1 text-gray-400">
                           <Phone className="w-3.5 h-3.5" />
@@ -175,11 +210,19 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
                       ) : (
                         <>
                           <div className="flex justify-between items-baseline">
-                            <span className="text-gray-400">剩余额度/信用额度</span>
+                            <span className="text-gray-400">
+                              {customer.isCreditOverdue ? '超出额度' : '剩余额度'}/信用额度
+                            </span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-lg font-bold text-gray-900">
-                                ¥{Math.max(0, customer.remainingCredit).toFixed(0)}
-                              </span>
+                              {customer.isCreditOverdue ? (
+                                <span className="text-lg font-bold text-rose-600">
+                                  -¥{Math.abs(customer.remainingCredit).toFixed(0)}
+                                </span>
+                              ) : (
+                                <span className={`text-lg font-bold ${colors?.text || 'text-gray-900'}`}>
+                                  ¥{customer.remainingCredit.toFixed(0)}
+                                </span>
+                              )}
                               <span className="text-xs text-gray-400">
                                 / ¥{customer.creditLimit.toFixed(0)}
                               </span>
@@ -189,29 +232,26 @@ export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: ()
                             <div className="flex items-center gap-2">
                               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div 
-                                  className={`h-full rounded-full transition-all ${
-                                    (() => {
-                                      const percentage = (customer.remainingCredit / customer.creditLimit) * 100;
-                                      if (percentage > 30) return 'bg-emerald-500';
-                                      if (percentage >= 10) return 'bg-amber-500';
-                                      return 'bg-rose-500';
-                                    })()
-                                  }`}
+                                  className={`h-full rounded-full transition-all ${colors?.progress || 'bg-gray-300'}`}
                                   style={{ 
-                                    width: `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100))}%` 
+                                    width: customer.isCreditOverdue 
+                                      ? '100%' 
+                                      : `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100))}%` 
                                   }}
                                 />
                               </div>
-                              <span className={`text-xs font-medium w-10 text-right ${
-                                (() => {
-                                  const percentage = (customer.remainingCredit / customer.creditLimit) * 100;
-                                  if (percentage > 30) return 'text-emerald-600';
-                                  if (percentage >= 10) return 'text-amber-600';
-                                  return 'text-rose-600';
-                                })()
-                              }`}>
-                                {Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100)).toFixed(0)}%
+                              <span className={`text-xs font-medium w-12 text-right ${colors?.text || 'text-gray-400'}`}>
+                                {customer.isCreditOverdue 
+                                  ? '超额'
+                                  : `${Math.max(0, Math.min(100, (customer.remainingCredit / customer.creditLimit) * 100)).toFixed(0)}%`
+                                }
                               </span>
+                            </div>
+                          )}
+                          {customer.isCreditOverdue && (
+                            <div className="flex items-center gap-1 text-rose-600 text-xs">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              <span>超出额度 ¥{Math.abs(customer.remainingCredit).toFixed(0)}，请引导客户先还款</span>
                             </div>
                           )}
                         </>
