@@ -28,9 +28,9 @@ export default function Profile({ onOpenLogin }: ProfileProps) {
         {/* 用户信息卡片 */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           {user ? (
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-7 h-7 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-lg">👤</span>
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-gray-900 break-all">{user.email}</p>
@@ -49,9 +49,9 @@ export default function Profile({ onOpenLogin }: ProfileProps) {
               onClick={onOpenLogin}
               className="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
-                  <User className="w-7 h-7 text-gray-400" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-lg">👤</span>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">登录 / 注册</p>
@@ -65,9 +65,9 @@ export default function Profile({ onOpenLogin }: ProfileProps) {
 
         {/* 数据说明 */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">数据存储</h2>
-          <div className="bg-blue-50 rounded-lg p-4">
-            <ul className="text-sm text-blue-800 space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">数据存储</h2>
+          <div className="bg-blue-50 rounded-lg p-3">
+            <ul className="text-xs text-blue-700 space-y-1.5">
               <li>• 登录后数据自动同步到云端</li>
               <li>• 更换设备登录同一账号即可查看数据</li>
               <li>• 数据安全存储在 Supabase 云端</li>
