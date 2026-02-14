@@ -23,17 +23,17 @@ interface CustomerWithCalculated extends Customer {
 export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: () => void; onOpenLogin?: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
   const { transactions, fetchTransactions } = useTransactionStore();
-  const { user } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | undefined>(undefined);
 
   useEffect(() => {
-    if (user) {
+    if (initialized && user) {
       fetchCustomers();
       fetchTransactions();
     }
-  }, [user, fetchCustomers, fetchTransactions]);
+  }, [initialized, user, fetchCustomers, fetchTransactions]);
 
   const customersWithCalculated: CustomerWithCalculated[] = useMemo(() => {
     const now = new Date();

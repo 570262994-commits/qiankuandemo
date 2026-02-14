@@ -48,7 +48,7 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
   const { customers, fetchCustomers } = useCustomerStore();
   const { confirm } = useModalStore();
   const { viewMode, setViewMode } = useViewModeStore();
-  const { user } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>(undefined);
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -103,11 +103,11 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
   };
 
   useEffect(() => {
-    if (user) {
+    if (initialized && user) {
       fetchCustomers();
       fetchTransactions();
     }
-  }, [user, fetchCustomers, fetchTransactions]);
+  }, [initialized, user, fetchCustomers, fetchTransactions]);
 
   useEffect(() => {
     if ((customerFilter === 'overdue' || customerFilter === 'due_soon') && filterType === TransactionType.PAYBACK) {
