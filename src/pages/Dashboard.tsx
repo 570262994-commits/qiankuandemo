@@ -732,11 +732,8 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                         >
                           <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <p className="text-xs text-gray-500 leading-relaxed flex-1">
-                              {expandedNotes.has(customer.overdueTransactions[0].id) 
-                                ? customer.overdueTransactions[0].note
-                                : customer.overdueTransactions[0].note.slice(0, 14) + (customer.overdueTransactions[0].note.length > 14 ? '...' : '')
-                              }
+                            <p className={`text-xs text-gray-500 leading-relaxed flex-1 ${expandedNotes.has(customer.overdueTransactions[0].id) ? '' : 'line-clamp-1'}`}>
+                              {customer.overdueTransactions[0].note}
                             </p>
                             {customer.overdueTransactions[0].note.length > 14 && (
                               <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
@@ -802,11 +799,8 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                               >
                                 <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                                 <div className="flex-1 min-w-0 flex items-start gap-1">
-                                  <span className="text-xs text-gray-600 flex-1">
-                                    {expandedNotes.has(tx.id) 
-                                      ? tx.note
-                                      : tx.note!.slice(0, 14) + (tx.note!.length > 14 ? '...' : '')
-                                    }
+                                  <span className={`text-xs text-gray-600 flex-1 ${expandedNotes.has(tx.id) ? '' : 'line-clamp-1'}`}>
+                                    {tx.note}
                                   </span>
                                   {tx.note.length > 14 && (
                                     <span className="flex-shrink-0 text-gray-400">
@@ -942,11 +936,8 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                       >
                         <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                         <div className="flex-1 min-w-0 flex items-start gap-1">
-                          <p className="text-xs text-gray-500 leading-relaxed flex-1">
-                            {expandedNotes.has(transaction.id!) 
-                              ? transaction.note
-                              : transaction.note!.slice(0, 14) + (transaction.note!.length > 14 ? '...' : '')
-                            }
+                          <p className={`text-xs text-gray-500 leading-relaxed flex-1 ${expandedNotes.has(transaction.id!) ? '' : 'line-clamp-1'}`}>
+                            {transaction.note}
                           </p>
                           {transaction.note.length > 14 && (
                             <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
