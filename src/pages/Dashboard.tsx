@@ -700,7 +700,7 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                   className="bg-white rounded-xl shadow-sm overflow-hidden active:scale-[0.98] transition-transform"
                 >
                   <div 
-                    className="flex items-center justify-between p-4 cursor-pointer"
+                    className="flex items-start justify-between p-4 cursor-pointer"
                     onClick={() => {
                       setExpandedCustomers(prev => {
                         const newSet = new Set(prev);
@@ -713,7 +713,7 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                       });
                     }}
                   >
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-3">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-900">{customer.customerName}</span>
                         <span className="text-xs text-red-600 font-medium">已逾期 {customer.overdueDays} 天</span>
@@ -748,8 +748,8 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right w-20 flex-shrink-0">
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <div className="text-right w-20">
                         <p className="font-bold text-rose-600 font-mono text-lg">
                           <span className="text-xs text-gray-400">¥</span>{customer.overdueAmount.toFixed(0)}
                         </p>
