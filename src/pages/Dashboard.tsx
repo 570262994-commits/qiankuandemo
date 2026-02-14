@@ -732,8 +732,11 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
                         >
                           <span className="text-gray-400 text-xs flex-shrink-0">备注:</span>
                           <div className="flex-1 min-w-0 flex items-start gap-1">
-                            <p className={`text-xs text-gray-500 leading-relaxed flex-1 ${expandedNotes.has(customer.overdueTransactions[0].id) ? '' : 'line-clamp-1'}`}>
-                              {customer.overdueTransactions[0].note}
+                            <p className="text-xs text-gray-500 leading-relaxed flex-1">
+                              {expandedNotes.has(customer.overdueTransactions[0].id) 
+                                ? customer.overdueTransactions[0].note
+                                : customer.overdueTransactions[0].note.slice(0, 14) + (customer.overdueTransactions[0].note.length > 14 ? '...' : '')
+                              }
                             </p>
                             {customer.overdueTransactions[0].note.length > 14 && (
                               <button className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
