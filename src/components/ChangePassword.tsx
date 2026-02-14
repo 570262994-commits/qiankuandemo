@@ -84,7 +84,7 @@ export default function ChangePassword({ isOpen, onClose }: ChangePasswordProps)
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error) {
+    } catch {
       setLoading(false);
       toast.error('修改失败，请重试');
     }

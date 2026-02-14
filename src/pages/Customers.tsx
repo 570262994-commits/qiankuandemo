@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Plus, Phone, Bell, AlertTriangle, AlertCircle, Clock } from 'lucide-react';
+import { Plus, Phone, Bell, AlertTriangle, Clock } from 'lucide-react';
 import { useCustomerStore } from '../store/customerStore';
 import { useTransactionStore } from '../store/transactionStore';
 import { useAuthStore } from '../store/authStore';
@@ -40,7 +40,7 @@ interface CustomerWithCalculated extends Customer {
   isCreditOverdue: boolean;
 }
 
-export default function Customers({ onBack: _onBack, onOpenLogin }: { onBack: () => void; onOpenLogin?: () => void }) {
+export default function Customers({ onOpenLogin }: { onBack: () => void; onOpenLogin?: () => void }) {
   const { customers, fetchCustomers } = useCustomerStore();
   const { transactions, fetchTransactions } = useTransactionStore();
   const { user, initialized } = useAuthStore();

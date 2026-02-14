@@ -68,7 +68,7 @@ export default function ChangeEmail({ isOpen, onClose }: ChangeEmailProps) {
       onClose();
       setNewEmail('');
       setPassword('');
-    } catch (error) {
+    } catch {
       setLoading(false);
       toast.error('修改失败，请重试');
     }

@@ -1,3 +1,4 @@
+// eslint-disable-next-line react-refresh/only-export-components
 import { useEffect } from 'react';
 import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
 

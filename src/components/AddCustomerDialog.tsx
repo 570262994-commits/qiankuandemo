@@ -51,15 +51,22 @@ export default function AddCustomerDialog({ isOpen, onClose, onSubmit, customer 
   useEffect(() => {
     if (isOpen) {
       if (customer) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setName(customer.name);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPhone(customer.phone || '');
         if (customer.creditLimit === CREDIT_LIMIT_UNLIMITED) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setIsUnlimitedCredit(true);
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setCreditLimit('0');
         } else {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setIsUnlimitedCredit(false);
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setCreditLimit(customer.creditLimit.toString());
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPaymentTerm(customer.paymentTerm.toString());
       } else {
         resetForm();

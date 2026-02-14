@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Plus, ChevronDown, ChevronUp, Search, X, Calendar, AlertTriangle, SlidersHorizontal, Wand2 } from 'lucide-react';
 import { useTransactionStore } from '../store/transactionStore';
 import { useCustomerStore } from '../store/customerStore';
@@ -176,10 +176,10 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
     });
   };
 
-  const getCustomerName = (customerId: number) => {
+  const getCustomerName = useCallback((customerId: number) => {
     const customer = customers.find(c => c.id === customerId);
     return customer?.name || '未知客户';
-  };
+  }, [customers]);
 
   const customerDueInfo = useMemo(() => {
     const now = new Date();
@@ -486,17 +486,18 @@ export default function Dashboard({ onOpenLogin }: DashboardProps) {
             case 'due_soon':
               matchesCustomerFilter = !dueInfo.isOverdue && dueInfo.daysUntilDue >= 0 && dueInfo.daysUntilDue <= 7 && dueInfo.hasDebt;
               break;
-            case 'long_term':
+            case 'long_term': {
               const customer = customers.find(c => c.id === transaction.customerId);
               matchesCustomerFilter = (customer?.paymentTerm || 0) > 30;
               break;
+            }
           }
         }
       }
       
       return matchesSearch && matchesDate && matchesType && matchesBillStatus && matchesCustomerFilter;
     });
-  }, [transactions, searchText, filterDate, filterType, customers, customerFilter, customerDueInfo, overdueTransactionIds, billStatusFilter]);
+  }, [transactions, searchText, filterDate, filterType, customers, customerFilter, customerDueInfo, overdueTransactionIds, billStatusFilter, getCustomerName]);
 
   const clearFilters = () => {
     setSearchText('');

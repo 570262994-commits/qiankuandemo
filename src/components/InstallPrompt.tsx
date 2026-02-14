@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { X, Share, Plus } from 'lucide-react';
 
+interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 export default function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = (window.navigator as any).standalone === true;
+    const isStandalone = (window.navigator as NavigatorWithStandalone).standalone === true;
     const wasDismissed = localStorage.getItem('installPromptDismissed') === 'true';
 
     if (isIOS && !isStandalone && !wasDismissed) {

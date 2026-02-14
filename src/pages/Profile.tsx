@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, LogOut, Mail, Shield, ChevronRight } from 'lucide-react';
+import { LogOut, Mail, Shield, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
 import ChangeEmail from '../components/ChangeEmail';
