@@ -41,6 +41,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     const customerTransactions = transactions.filter(t => t.customerId === selectedCustomer.id);
     const totalDebt = customerTransactions
       .filter(t => t.type === TransactionType.DEBT)
+      .filter(t => !isEditMode || t.id !== transaction?.id)
       .reduce((sum, t) => sum + t.amount, 0);
     const totalPayment = customerTransactions
       .filter(t => t.type === TransactionType.PAYBACK)
@@ -48,7 +49,7 @@ export default function TransactionDrawer({ isOpen, onClose, onSubmit, transacti
     const balance = totalDebt - totalPayment;
     
     return selectedCustomer.creditLimit - balance;
-  }, [selectedCustomer, transactions]);
+  }, [selectedCustomer, transactions, isEditMode, transaction?.id]);
 
   useEffect(() => {
     if (isOpen) {
